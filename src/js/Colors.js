@@ -1,0 +1,1 @@
+const COLORS = ["black","red","green","blue","orange","yellow","white"];
