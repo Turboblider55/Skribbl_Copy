@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
     <link rel="stylesheet" href="../css/style.css">
-    <script src="../js/Colors.js"></script>
-
-    
     <title>Skribbl Copy</title>
 </head>
 <body class="FlexAlignments">
@@ -19,12 +16,13 @@
                 <div>1</div>
                 <div>1</div>
             </div>
-            
             <div class="col-md-6 FlexAlignments" id="Main-Area">
                 <canvas></canvas>
                 <div id="Tools" class="FlexAlignments">
-
+                    <div id="Bucket" onclick="SetCurrentTool('bucket')">Bucket</div>
+                    <div id="Pen" onclick="SetCurrentTool('pen')">Pen</div>
                 </div>
+                <div id="Chat"></div>
             </div>
             <div class="col-md-3 d-flex justify-content-center flex-column">
                 <div>1</div>
@@ -35,10 +33,10 @@
     </div>
     <!-- <canvas></canvas> -->
 
-    <script src="../js/Vectors.js"></script>
-    <script src="../js/RenderPaletta.js"></script>
-    <script src="../js/draw.js"></script>
-    <script src="../js/mouse.js"></script>
-    <script src="../js/script.js"></script>
+    <script src="./js/Vectors.js"></script>
+    <script src="./js/RenderPaletta.js"></script>
+    <script src="./js/draw.js"></script>
+    <script src="./js/mouse.js"></script>
+    <script src="./js/script.js"></script>
 </body>
 </html>

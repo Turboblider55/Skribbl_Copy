@@ -4,9 +4,8 @@ const Draw = (ctx,color,pos1,pos2,offsetx,offsety) => {
     const DY = pos2.y - pos1.y;
     const DISTANCE = Math.sqrt((DX * DX + DY * DY));
     const SUB_STEP = DISTANCE;
-    console.log(SUB_STEP);
+    //console.log(SUB_STEP);
     const RATIO = 1.0 / SUB_STEP;
-
 
     ctx.beginPath();
     ctx.fillStyle = color;
@@ -20,4 +19,9 @@ const Draw = (ctx,color,pos1,pos2,offsetx,offsety) => {
         ctx.fill();
     }
     ctx.closePath();
+}
+
+const Fill = (ctx,pos,color) => {
+    var c = ctx.getImageData(pos.x, pos.y, 1, 1).data;
+    console.log(c);
 }

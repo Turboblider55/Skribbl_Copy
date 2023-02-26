@@ -2,7 +2,17 @@ const canvas = document.querySelector("canvas");
 const holder = document.querySelector("#Main-Area");
 const tools = document.querySelector("#Tools");
 //console.log(holder.offsetLeft)
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
+
+console.log(ctx);
+console.log(ctx.getContextAttributes());
+
+
+let TOOL = 'pen';
+
+const SetCurrentTool = function(tool){
+    TOOL = tool;
+}
 
 canvas.width = window.innerWidth * 0.25;
 //console.log(canvas.offsetLeft);
@@ -28,10 +38,6 @@ const OFFSETY = holder.offsetTop + canvas.offsetTop;
 //canvas.height = window.innerHeight * 0.5;
 // canvas.width = window.innerWidth;
 // canvas.height = window.innerHeight;
-
-
-
-
 
 
 canvas.addEventListener('mousedown',event=>{
@@ -68,9 +74,11 @@ canvas.addEventListener('mousemove',event=>{
 });
 
 const loop = () => {
-    if(STATES.MOUSEDOWN)
-        Draw(ctx,COLORS[STATES.COLOR],STATES.PREV,STATES.CURR,OFFSETX,OFFSETY);
-
+    if(STATES.MOUSEDOWN && STATES.MOUSEPREV)
+        if(TOOL == 'pen')
+            Draw(ctx,COLORS[STATES.COLOR],STATES.PREV,STATES.CURR,OFFSETX,OFFSETY);
+        else
+            Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);
     requestAnimationFrame(loop)
 }
 

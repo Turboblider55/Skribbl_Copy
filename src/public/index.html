@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <link rel="stylesheet" href="../css/lobby.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <title>Lobby</title>
+</head>
+<body>
+    <div class="container container-column Main-Container" id = 'lobby' style="display: flex;">
+        <div class="OptionHolder">
+            <form action="" class="form">
+                <div class="form-group">
+                    <input type="text" name="username" id="username" class="form-control mb-2 mt-2" placeholder="Username" >
+                    <select name="language" id="language" class="form-control mb-2 mt-2">
+                        <option value="english">English</option>
+                        <option value="german">German</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="container container-row">
+                        <div class="container-column Arrows-Left">
+                            <li class="arrow left">1</li>
+                            <li class="arrow left">2</li>
+                            <li class="arrow left">3</li>
+                        </div>
+                        <div class="character container-column">
+                            <div class="red"></div>
+                            <div class="green"></div>
+                            <div class="blue"></div>
+                        </div>
+                        <div class="container-column Arrows-Right">
+                            <li class="arrow right">4</li>
+                            <li class="arrow right">5</li>
+                            <li class="arrow right">6</li>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="form-control btn btn-success mb-2 mt-2" onclick="JoinRoom()">Join Game</button>
+                    <button type="button" class="form-control btn btn-primary mb-2 mt-2" onclick="CreateRoom()">Create Game</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- The game planel -->
+    <div class="container" id="game" style="display: none;">
+        <div class="row text-center">
+            <div class="col-md-3 d-flex justify-content-center flex-column">
+                <div>1</div>
+                <div>1</div>
+                <div>1</div>
+            </div>
+            <div class="col-md-6 FlexAlignments" id="Main-Area">
+                <canvas></canvas>
+                <div id="Tools" class="FlexAlignments">
+                    <div id="Bucket" onclick="SetCurrentTool('bucket')">Bucket</div>
+                    <div id="Pen" onclick="SetCurrentTool('pen')">Pen</div>
+                </div>
+                <div id="Chat"></div>
+            </div>
+            <div class="col-md-3 d-flex justify-content-center flex-column">
+                <div>1</div>
+                <div>1</div>
+                <div>1</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="./js/generateName.js"></script>
+    <script src="./js/game.js"></script>
+    <script src="./js/Vectors.js"></script>
+    <script src="../js/Colors.js"></script>
+    <script src="./js/RenderPaletta.js"></script>
+    <script src="./js/draw.js"></script>
+    <script src="./js/mouse.js"></script>
+    <script src="./js/script.js"></script>
+</body>
+</html>
