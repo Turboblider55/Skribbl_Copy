@@ -1,11 +1,6 @@
 const mongoose = require("mongoose");
 const {usermodel,userSchema} = require('./user');
 
-const testSchema = new mongoose.Schema({
-    name : String,
-    age : Number,
-});
-
 const roomSchema = new mongoose.Schema({
     players : [userSchema],
     

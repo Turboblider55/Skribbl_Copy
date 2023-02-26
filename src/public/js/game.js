@@ -2,6 +2,8 @@
 let socket = io();
 let ID = "";
 
+let username = '';
+
 function validateName(name){
     return name.trim().length > 0 && name.split(" ").length == 1;
 }
@@ -11,27 +13,23 @@ function game(){
     document.querySelector("#lobby").style.display = 'none';
     //console.log("Hello");
 }
-function room(){
-    
-}
 
 function JoinRoom(){
     const u = document.querySelector("#username").value;
     const l = document.querySelector("#language").value;    
 
     if(c){
-        let name = '';
         if(u.length > 0)
             if(validateName(u))
-                name = u;
+                username = u;
             else
                 alert("This name is not valid!");
         else{
-            name = generatename();
-            console.log(name);
+            username = generatename();
+            console.log(username);
         }
 
-        socket.emit("Join",{name,lang : l,id : ID},function(err){
+        socket.emit("Join",{name : username,lang : l,id : ID},function(err){
             if(err){
                 console.log(err);
             }
@@ -41,38 +39,12 @@ function JoinRoom(){
             }
         })
     }
-}
-
-function CreateRoom(){
-    const u = document.querySelector("#username").value;
-    const l = document.querySelector("#language").value;    
-
-    if(c){
-        let name = '';
-        if(u.length > 0)
-            if(validateName(u))
-                name = u;
-            else
-                alert("This name is not valid!");
-        else{
-            name = generatename();
-            console.log(name);
-        }
-
-        socket.emit("Join",{name,lang : l,id : ID},function(err){
-            if(err){
-                console.log(err);
-            }
-            else{
-                console.log('No error here!');
-                game();
-            }
-        })
+    else{
+        alert("Could not connect to the server!");
     }
 }
 
 let c = false;
-
 
 socket.on("connect",function(){
     console.log("Socket connected succesfully!");
@@ -83,5 +55,14 @@ socket.on("connect",function(){
 
 socket.on('disconnect', function(){
     console.log('Disconnected from server');
-    
+
+    socket.emit("leave",{name : username},function(err){
+        if(err){
+            console.log(err);
+        }
+        else{
+            console.log('No error here!');
+            game();
+        }
+    })
 });

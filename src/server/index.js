@@ -44,17 +44,17 @@ io.on("connection", (socket) => {
         try{
             if(def == 1){
                 const room = new Room({lang : lang});
-                const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true });
-                room.players.push(user);
-                await room.save();
-                return cb("new room created");
+                //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true });
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true });
+                await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
+                //return cb("new room created");
             }
             else{
-                const room = new Room({lang : lang});
-                const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
-                room.players.push(user);
+                const room = new Room({lang : lang , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
+                //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true });
                 await room.save();
-                return cb("new room created");
+                //return cb("new room created");
             }
         }catch(err){
             console.log(err);
@@ -76,16 +76,11 @@ io.on("connection", (socket) => {
                 //console.log(room);
                 if(room){
                     console.log(room);
-                    const user =  new usermodel({name : username,socketid : socketid});
+                    const user =  new usermodel({username : username,socketid : socketid});
                     //console.log(user);
-                    if(user)
-                        console.log(user);
-                    else{
-                        rconsole.log("No user has been created");
-                        return cb("no user created!");
-                    }
                     //room.updateOne({$push : {players : {name : name,socketid : socketid}}});
                     room.players.push({username : username,socketid : socketid});
+                    await room.save();
                     //room = await room.save().then(()=>console.log("Saved")).catch((err)=>console.log("An error occured : "+err));
                 }
                 else{
