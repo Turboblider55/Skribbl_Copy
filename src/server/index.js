@@ -40,6 +40,15 @@ let io = require("socket.io")(server);
 io.on("connection", (socket) => {
     console.log("Socket connection successfull!");
 
+    const deleteRoom = async function(roomid){
+        try{
+            const status = await Room.deleteOne({_id : roomid},{justOne : true});
+            return status;
+        }catch(err){
+            return false;
+        }
+    }
+
     const createRoom = async function( def , username , socketid , lang , cb , maxPlayerCount , maxRound , DrawTime ) {
         try{
             if(def == 1){
@@ -47,6 +56,7 @@ io.on("connection", (socket) => {
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true });
                 room.players.push({username : username , socketid : socketid , isPartyLeader : true });
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
+                return room._id;
                 //return cb("new room created");
             }
             else{
@@ -54,6 +64,7 @@ io.on("connection", (socket) => {
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
                 room.players.push({username : username , socketid : socketid , isPartyLeader : true });
                 await room.save();
+                return room._id;
                 //return cb("new room created");
             }
         }catch(err){
@@ -62,7 +73,7 @@ io.on("connection", (socket) => {
         }
     }
 
-    const addUserToRoom = async function( username , socketid , lang , cb) {
+    const JoinRoom = async function( username , socketid , lang , cb) {
 
         //Another was to create a user with one function that will save it to the db
             // const room = new Room({name : 'Test2'});
@@ -81,18 +92,18 @@ io.on("connection", (socket) => {
                     //room.updateOne({$push : {players : {name : name,socketid : socketid}}});
                     room.players.push({username : username,socketid : socketid});
                     await room.save();
+                    return room._id;
                     //room = await room.save().then(()=>console.log("Saved")).catch((err)=>console.log("An error occured : "+err));
                 }
                 else{
-                    await createRoom(1 , username , socketid , lang , cb);
+                    const roomid = await createRoom(1 , username , socketid , lang , cb);
+                    return roomid;
                     // console.log("No room found!");
                     // return cb("no room found");
                 }
             }catch(err){
                 console.error(err);
             }
-
-
         //Creating object based on test schema
         //const test = new Test({name : "John",age : 16});
         //await test.save();
@@ -113,17 +124,33 @@ io.on("connection", (socket) => {
             console.log("Got everything!");
             console.log("name : "+params.name+", lang: "+params.lang);
 
-            await addUserToRoom(params.name,params.id,params.lang,cb);
-            return cb(null);
+            const roomid = await JoinRoom(params.name,params.id,params.lang,cb);
+            return cb(roomid,null);
         }
         else{
             return cb("Something went wrong!");
         }
-    })
-
+    });
 
     socket.on('disconnect',()=>{
         console.log("A user just disconnected from the server.");
+        console.log(socket.id);
+    });
+
+    socket.on("leave",async function(params,cb){
+        let room = await Room.findOne({_id : params.roomid});
+        if(room)
+            if(room.players.length > 1){
+                console.log("Room found!");
+                room.players.pull({socketid : params.socketid});
+                await room.save();
+                //Get the updated room the check if anyone player is in there
+            }else{
+                const status = await deleteRoom(params.roomid);
+                console.log("Room deleting status : "+status.acknowledged);
+            }
+        else
+            cb("No room found!");
     });
 })
 

@@ -3,14 +3,21 @@ let socket = io();
 let ID = "";
 
 let username = '';
+let roomid = '';
+let Joined = false;
 
 function validateName(name){
     return name.trim().length > 0 && name.split(" ").length == 1;
 }
 
-function game(){
+function gameon(){
     document.querySelector("#game").style.display = 'flex';
     document.querySelector("#lobby").style.display = 'none';
+    //console.log("Hello");
+}
+function gameoff(){
+    document.querySelector("#game").style.display = 'none';
+    document.querySelector("#lobby").style.display = 'flex';
     //console.log("Hello");
 }
 
@@ -29,13 +36,16 @@ function JoinRoom(){
             console.log(username);
         }
 
-        socket.emit("Join",{name : username,lang : l,id : ID},function(err){
+        socket.emit("Join",{name : username,lang : l,id : ID},function(data,err){
             if(err){
                 console.log(err);
             }
             else{
+                roomid = data;
+                console.log(roomid);
                 console.log('No error here!');
-                game();
+                gameon();
+                Joined = !Joined;
             }
         })
     }
@@ -48,21 +58,28 @@ let c = false;
 
 socket.on("connect",function(){
     console.log("Socket connected succesfully!");
-    console.log(socket.id);
+    //console.log(socket.id);
     ID = socket.id;
     c = true;
 });
 
+socket.on("room-name",function(obj){
+    console.log(obj.roomname);
+    roomid = obj.roomname;
+});
+
 socket.on('disconnect', function(){
     console.log('Disconnected from server');
-
-    socket.emit("leave",{name : username},function(err){
-        if(err){
-            console.log(err);
-        }
-        else{
-            console.log('No error here!');
-            game();
-        }
-    })
+    gameoff();
+    if(Joined){
+        socket.emit("leave",{ roomid , socketid : ID},function(err){
+            if(err){
+                console.log(err);
+            }
+            else{
+                console.log('disconnected');
+            }
+        })
+        Joined = !Joined;
+    }
 });
