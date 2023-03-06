@@ -1,13 +1,13 @@
 
 let socket = io();
 let socketid = "";
-
+let c = false;
 let username = '';
 let roomid = '';
 let Joined = false;
 
 function validateName(name){
-    return name.trim().length > 0 && name.split(" ").length == 1;
+    return name.trim().length > 0;
 }
 
 function gameon(){
@@ -22,8 +22,10 @@ function gameoff(){
 }
 
 function Disconnect(){
-    gameoff();
+    socket.emit("test-send",{data:'test_text'});
     if(Joined){
+        gameoff();
+        console.log("This code runs for sure!");
         socket.emit("leave",{roomid , socketid})
     }
 }
@@ -49,10 +51,10 @@ function JoinRoom(){
             }
             else{
                 roomid = data;
-                console.log(roomid);
+                console.log(data);
                 console.log('No error here!');
+                Joined = true;
                 gameon();
-                Joined = !Joined;
             }
         })
     }
@@ -60,11 +62,6 @@ function JoinRoom(){
         alert("Could not connect to the server!");
     }
 }
-
-function CreateRoom(){
-}
-
-let c = false;
 
 socket.on("connect",function(){
     console.log("Socket connected succesfully!");
@@ -95,7 +92,8 @@ socket.on('disconnect', function(){
 });
 
 window.onbeforeunload = function(event)
-    {
-        console.log("Refresh comfirmed!");
-        Disconnect();
-    };
+{
+    console.log("Refresh comfirmed!");
+    Disconnect();
+};
+

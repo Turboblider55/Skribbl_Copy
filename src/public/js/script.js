@@ -4,10 +4,6 @@ const tools = document.querySelector("#Tools");
 //console.log(holder.offsetLeft)
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 
-console.log(ctx);
-console.log(ctx.getContextAttributes());
-
-
 let TOOL = 'pen';
 
 const SetCurrentTool = function(tool){

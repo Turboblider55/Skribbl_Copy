@@ -28,3 +28,6 @@ canvas{
     flex-direction: column;
     padding: 10px;
 }
+.Side_Panel{
+    background-color: red;
+}

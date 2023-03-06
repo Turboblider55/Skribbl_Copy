@@ -5,14 +5,8 @@ const mongoose = require("mongoose");
 const Room = require('./libs/Schemas/room');
 const {usermodel} = require("./libs/Schemas/user");
 
-// var socket = require("socket.io");
-// var io = socket(server);
-
 const app = express();
 let server = http.createServer(app);
-
-//shortcut
-
 
 const publicpath = path.join(__dirname,"/../public/");
 console.log(publicpath);
@@ -20,6 +14,7 @@ const port = process.env.PORT || 3000;
 
 //midleware
 app.use(express.static(publicpath));
+//app.use(express.json());
 
 //Connect to our MondoDB
 const DB = 'mongodb+srv://Turbo:WhJk23765@cluster0.tzcemsi.mongodb.net/?retryWrites=true&w=majority';
@@ -28,7 +23,7 @@ const DB = 'mongodb+srv://Turbo:WhJk23765@cluster0.tzcemsi.mongodb.net/?retryWri
 mongoose.set('strictQuery', false);
 
 mongoose.connect(DB).then(()=>{
-    console.log("Connection Succesfull!");
+    console.log("Mongoose Connection Succesfull!");
 
 }).catch((err)=>{
     console.error("An error occured! error : "+err);
@@ -63,7 +58,7 @@ io.on("connection", (socket) => {
                 const room = new Room({lang : lang , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
                 room.players.push({username : username , socketid : socketid , isPartyLeader : true });
-                await room.save();
+                await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
             }
@@ -127,7 +122,8 @@ io.on("connection", (socket) => {
             const room = await JoinRoom(params.name,params.id,params.lang,cb);
             if(room){
                 socket.join(room._id);
-                io.to(room._id).emit('updateRoom',room);
+                //console.log(socket.rooms);
+                //io.to(room._id).emit('updateRoom',room);
                 console.log(room._id);
                 return cb(room._id,null);
             }
@@ -148,15 +144,18 @@ io.on("connection", (socket) => {
             if(room.players.length > 1){
                 console.log("Room found!");
                 room.players.pull({socketid : params.socketid});
-                //console.log(room);
                 await room.save();
                 //Sending to every user in the room the new roomdata
-                io.to(room._id).emit('updateRoom',room);
+                //io.to(room._id).emit('updateRoom',room);
                 //Get the updated room the check if anyone player is in there
             }else{
                 const status = await deleteRoom(params.roomid);
                 console.log("Room deleting status : "+status.acknowledged);
             }
+    });
+
+    socket.on("test-send",(data)=>{
+        console.log("The data that has been sent is : "+data.data);
     });
 })
 
