@@ -1,5 +1,6 @@
 
 let socket = io();
+
 let socketid = "";
 let c = false;
 let username = '';
@@ -21,11 +22,9 @@ function gameoff(){
     //console.log("Hello");
 }
 
-function Disconnect(){
-    socket.emit("test-send",{data:'test_text'});
+ function Disconnect(){
     if(Joined){
         gameoff();
-        console.log("This code runs for sure!");
         socket.emit("leave",{roomid , socketid})
     }
 }
@@ -91,9 +90,10 @@ socket.on('disconnect', function(){
     Disconnect();
 });
 
-window.onbeforeunload = function(event)
-{
-    console.log("Refresh comfirmed!");
-    Disconnect();
-};
+// window.onbeforeunload = function(event)
+// {
+//     Disconnect();
+//     console.log("Refresh comfirmed!");
+// };
+
 

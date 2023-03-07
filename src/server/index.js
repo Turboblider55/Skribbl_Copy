@@ -37,7 +37,7 @@ io.on("connection", (socket) => {
 
     const deleteRoom = async function(roomid){
         try{
-            const status = await Room.deleteOne({_id : roomid},{justOne : true});
+            const status = await Room.deleteOne({_id : roomid});
             return status;
         }catch(err){
             return false;
@@ -123,7 +123,7 @@ io.on("connection", (socket) => {
             if(room){
                 socket.join(room._id);
                 //console.log(socket.rooms);
-                //io.to(room._id).emit('updateRoom',room);
+                io.to(room._id).emit('updateRoom',room);
                 console.log(room._id);
                 return cb(room._id,null);
             }
@@ -140,26 +140,27 @@ io.on("connection", (socket) => {
     socket.on("leave",async function(params){
         const room = await Room.findOne({_id : params.roomid});
         console.log("This code runs when the page is refreshed!");
-        if(room)
+        
+        if(room){
+            //if we find a room with a matching roomid, then we also leave the socket room
+            socket.leave(params.roomid);
             if(room.players.length > 1){
                 console.log("Room found!");
                 room.players.pull({socketid : params.socketid});
+                
                 await room.save();
                 //Sending to every user in the room the new roomdata
-                //io.to(room._id).emit('updateRoom',room);
+                io.to(room._id).emit('updateRoom',room);
                 //Get the updated room the check if anyone player is in there
             }else{
                 const status = await deleteRoom(params.roomid);
                 console.log("Room deleting status : "+status.acknowledged);
             }
-    });
-
-    socket.on("test-send",(data)=>{
-        console.log("The data that has been sent is : "+data.data);
+        }
     });
 })
 
-server.listen(port,"0.0.0.0",() => {
+server.listen(port,() => {
     console.log("Server started and running on port "+port +"!");
 })
 
