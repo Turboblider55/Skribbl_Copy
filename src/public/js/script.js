@@ -29,8 +29,8 @@ const setColor = (index) => {
 
 RenderPaletta(tools,setColor);
 
-const OFFSETX = holder.offsetLeft + canvas.offsetLeft;
-const OFFSETY = holder.offsetTop + canvas.offsetTop;
+// let OFFSETX = holder.offsetLeft + canvas.offsetLeft;
+// let OFFSETY = holder.offsetTop + canvas.offsetTop;
 //canvas.height = window.innerHeight * 0.5;
 // canvas.width = window.innerWidth;
 // canvas.height = window.innerHeight;
@@ -69,12 +69,22 @@ canvas.addEventListener('mousemove',event=>{
     // }
 });
 
+socket.on('paint_to_user',function(color,pos1,pos2){
+    Draw(ctx,color,pos1,pos2,canvas.offsetLeft,canvas.offsetTop);
+});
+
 const loop = () => {
-    if(STATES.MOUSEDOWN && STATES.MOUSEPREV)
-        if(TOOL == 'pen')
-            Draw(ctx,COLORS[STATES.COLOR],STATES.PREV,STATES.CURR,OFFSETX,OFFSETY);
+    if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
+        if(TOOL == 'pen'){
+            Draw(ctx,COLORS[STATES.COLOR],STATES.PREV,STATES.CURR,canvas.offsetLeft,canvas.offsetTop);
+            if(connected){
+                console.log("this code runs!");
+                socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],STATES.PREV,STATES.CURR);
+            }
+        }
         else
             Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);
+    }
     requestAnimationFrame(loop)
 }
 

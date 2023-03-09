@@ -3,7 +3,6 @@ const Draw = (ctx,color,pos1,pos2,offsetx,offsety) => {
     const DX = pos2.x - pos1.x;
     const DY = pos2.y - pos1.y;
     const DISTANCE = Math.sqrt((DX * DX + DY * DY));
-    console.log(pos1,pos2);
     const SUB_STEP = DISTANCE;
     //console.log(SUB_STEP);
     const RATIO = 1.0 / SUB_STEP;

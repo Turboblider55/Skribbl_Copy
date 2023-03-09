@@ -2,7 +2,7 @@
 let socket = io();
 
 let socketid = "";
-let c = false;
+let connected = false;
 let username = '';
 let roomid = '';
 let Joined = false;
@@ -33,7 +33,7 @@ function JoinRoom(){
     const u = document.querySelector("#username").value;
     const l = document.querySelector("#language").value;    
 
-    if(c){
+    if(connected){
         if(u.length > 0)
             if(validateName(u))
                 username = u;
@@ -66,7 +66,7 @@ socket.on("connect",function(){
     console.log("Socket connected succesfully!");
     //console.log(socket.id);
     socketid = socket.id;
-    c = true;
+    connected = true;
 });
 
 socket.on("updateRoom",function(room){

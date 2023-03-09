@@ -114,6 +114,11 @@ io.on("connection", (socket) => {
         //console.log(room);
     }
 
+    socket.on('paint_to_server',(room,color,pos1,pos2)=>{
+        console.log(room);
+        socket.broadcast.to(room).emit('paint_to_user',color,pos1,pos2);
+    });
+
     socket.on("Join",async function(params,cb){
         if(params.name && params.lang && params.id){
             //console.log("Got everything!");
@@ -121,10 +126,10 @@ io.on("connection", (socket) => {
 
             const room = await JoinRoom(params.name,params.id,params.lang,cb);
             if(room){
-                socket.join(room._id);
+                socket.join(room._id.valueOf());
                 //console.log(socket.rooms);
                 io.to(room._id).emit('updateRoom',room);
-                console.log(room._id);
+                console.log(room._id.valueOf());
                 return cb(room._id,null);
             }
         }
