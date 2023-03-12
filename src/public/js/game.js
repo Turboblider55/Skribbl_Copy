@@ -6,6 +6,8 @@ let connected = false;
 let username = '';
 let roomid = '';
 let Joined = false;
+let isLeader = false;
+let current_room;
 
 function validateName(name){
     return name.trim().length > 0;
@@ -29,6 +31,7 @@ function gameoff(){
     }
 }
 
+
 function JoinRoom(){
     const u = document.querySelector("#username").value;
     const l = document.querySelector("#language").value;    
@@ -49,8 +52,12 @@ function JoinRoom(){
                 console.log(err);
             }
             else{
-                roomid = data;
-                console.log(data);
+                roomid = data._id.valueOf();
+                //console.log(data.players.find(user=> user.socketid == socketid).isPartyLeader);
+                isLeader = data.players.find(user=> user.socketid == socketid).isPartyLeader;
+                //console.log(isLeader);
+                current_room = data;
+                //console.log(data);
                 console.log('No error here!');
                 Joined = true;
                 gameon();
@@ -71,6 +78,9 @@ socket.on("connect",function(){
 
 socket.on("updateRoom",function(room){
     console.log(room);
+    isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
+    //console.log(isLeader);
+    current_room = room;
 })
 
 socket.on('disconnect', function(){

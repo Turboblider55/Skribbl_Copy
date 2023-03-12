@@ -114,9 +114,12 @@ io.on("connection", (socket) => {
         //console.log(room);
     }
 
-    socket.on('paint_to_server',(room,color,pos1,pos2)=>{
-        console.log(room);
-        socket.broadcast.to(room).emit('paint_to_user',color,pos1,pos2);
+    socket.on('paint_to_server',(room,color,pos1,pos2,width)=>{
+        socket.broadcast.to(room).emit('paint_to_user',color,pos1,pos2,width);
+    });
+
+    socket.on("new-message-to-server",(roomid,username,text)=>{
+        io.to(roomid).emit("new-message-to-user",username,text);
     });
 
     socket.on("Join",async function(params,cb){
@@ -128,9 +131,10 @@ io.on("connection", (socket) => {
             if(room){
                 socket.join(room._id.valueOf());
                 //console.log(socket.rooms);
-                io.to(room._id).emit('updateRoom',room);
+                //io.to(room._id).emit('updateRoom',room);
+                socket.broadcast.to(room._id.valueOf()).emit('updateRoom',room);
                 console.log(room._id.valueOf());
-                return cb(room._id,null);
+                return cb(room,null);
             }
         }
         else{
@@ -143,20 +147,25 @@ io.on("connection", (socket) => {
     });
 
     socket.on("leave",async function(params){
-        const room = await Room.findOne({_id : params.roomid});
-        console.log("This code runs when the page is refreshed!");
+        let room = await Room.findOne({_id : params.roomid});
+        //console.log("This code runs when the page is refreshed!");
         
         if(room){
-            //if we find a room with a matching roomid, then we also leave the socket room
+            //if we find a room with a matching roomid, then we leave the socket room and the mongodb room too
             socket.leave(params.roomid);
+
             if(room.players.length > 1){
+                //We can only do one task at once, we have to save and fetch the room again between tasks
                 console.log("Room found!");
                 room.players.pull({socketid : params.socketid});
-                
                 await room.save();
+                room = await Room.findOne({_id : params.roomid});
+                room.players[0].isPartyLeader = true;
+                await room.save();
+                //for some reason, it won't update the local variable, so we have to fetch the updated one
+                room = await Room.findOne({_id : params.roomid});
                 //Sending to every user in the room the new roomdata
-                io.to(room._id).emit('updateRoom',room);
-                //Get the updated room the check if anyone player is in there
+                socket.broadcast.to(params.roomid).emit('updateRoom',room);
             }else{
                 const status = await deleteRoom(params.roomid);
                 console.log("Room deleting status : "+status.acknowledged);

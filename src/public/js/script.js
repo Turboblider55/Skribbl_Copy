@@ -1,6 +1,8 @@
 const canvas = document.querySelector("canvas");
 const holder = document.querySelector("#Main-Area");
 const tools = document.querySelector("#Tools");
+const chat = document.querySelector("#Chat")
+const message_input = document.querySelector("#message_input");
 //console.log(holder.offsetLeft)
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 
@@ -9,6 +11,24 @@ let TOOL = 'pen';
 const SetCurrentTool = function(tool){
     TOOL = tool;
 }
+
+function sendMessage(event,obj){
+    if(event.key == 'Enter'){
+        event.preventDefault();
+        const text = obj.value;
+        socket.emit("new-message-to-server",roomid,username,text);
+        obj.value = '';
+    }
+}
+
+// message_input.addEventListener("keydown",function(event){
+
+//     if(event.key == "Enter")
+//         sendMessage();
+
+//     event.preventDefault();
+// });
+
 
 canvas.width = window.innerWidth * 0.25;
 //console.log(canvas.offsetLeft);
@@ -69,17 +89,25 @@ canvas.addEventListener('mousemove',event=>{
     // }
 });
 
-socket.on('paint_to_user',function(color,pos1,pos2){
-    Draw(ctx,color,pos1,pos2,canvas.offsetLeft,canvas.offsetTop);
+socket.on('paint_to_user',function(color,pos1,pos2,width){
+    Draw(ctx,color,pos1,pos2,width);
+});
+
+socket.on('new-message-to-user',function(username,text){
+    chat.insertAdjacentHTML('afterbegin',`<div>${username}: ${text}</div>`);
 });
 
 const loop = () => {
+    if(isLeader)
     if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
         if(TOOL == 'pen'){
-            Draw(ctx,COLORS[STATES.COLOR],STATES.PREV,STATES.CURR,canvas.offsetLeft,canvas.offsetTop);
+            const offset = new vec2(canvas.offsetLeft,canvas.offsetTop);
+            const new_prev = Vec2.Sub(offset,STATES.PREV);
+            const new_curr = Vec2.Sub(offset,STATES.CURR);
+            Draw(ctx,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
             if(connected){
                 console.log("this code runs!");
-                socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],STATES.PREV,STATES.CURR);
+                socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
             }
         }
         else

@@ -111,27 +111,27 @@ class vec2{
 
 const Vec2 = {
     Add: (v1,v2) => {
-        return new vec3(v1.x + v2.x , v1.y + v2.y );
+        return new vec2(v1.x + v2.x , v1.y + v2.y );
     },
     //From where -> to where
     Sub: (v1,v2) => {
-        return new vec3(v2.x - v1.x , v2.y - v1.y );
+        return new vec2(v2.x - v1.x , v2.y - v1.y );
     },
     Mul: (v,s) => {
-        return new vec3(v.x * s , v.y * s );
+        return new vec2(v.x * s , v.y * s );
     },
     Div: (v,d) => {
-        return new vec3(v.x / d , v.y / d );
+        return new vec2(v.x / d , v.y / d );
     },
     Length: (v1) => {
         return Math.sqrt(v1.x * v1.x + v1.y * v1.y);
     },
     Normalise: (v) =>{
-        const l = Vec3.Length(v);
-        return Vec3.Div(v,l);
+        const l = Vec2.Length(v);
+        return Vec2.Div(v,l);
     },
     Dot: (v1,v2) => {
-        return new vec3(v1.x * v2.x , v1.y * v2.y);
+        return new vec2(v1.x * v2.x , v1.y * v2.y);
     },
     Cross: (v1,v2) => { 
             return (v1.x * v2.y - v1.y * v2.x)

@@ -60,12 +60,14 @@
                     <div id="Bucket" onclick="SetCurrentTool('bucket')">Bucket</div>
                     <div id="Pen" onclick="SetCurrentTool('pen')">Pen</div>
                 </div>
-                <div id="Chat"></div>
             </div>
             <div class="Side_Panel">
-                <div>1</div>
-                <div>1</div>
-                <div>1</div>
+                <div id="Chat"></div>
+                <form>
+                    <div class="form-group">
+                            <input type="text" name="message_input" id="message_input" placeholder="Type your guess here..." class="form-control" onkeydown="sendMessage(event,this)">
+                    </div>
+                </form>
             </div>
         </div>
     </div>

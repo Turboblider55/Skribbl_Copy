@@ -31,3 +31,8 @@ canvas{
 .Side_Panel{
     background-color: red;
 }
+#Chat{
+    width: 300px;
+    height: 400px;
+    background-color: gray;
+}
