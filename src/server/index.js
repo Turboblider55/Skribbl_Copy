@@ -9,7 +9,7 @@ const app = express();
 let server = http.createServer(app);
 
 const publicpath = path.join(__dirname,"/../public/");
-console.log(publicpath);
+//console.log(publicpath);
 const port = process.env.PORT || 3000;
 
 //midleware
@@ -118,8 +118,39 @@ io.on("connection", (socket) => {
         socket.broadcast.to(room).emit('paint_to_user',color,pos1,pos2,width);
     });
 
-    socket.on("new-message-to-server",(roomid,username,text)=>{
-        io.to(roomid).emit("new-message-to-user",username,text);
+    socket.on("new-message-to-server",async (roomid , socketid , username , text , isGuessed, cb)=>{
+        const WordToGuess = 'TesztSzo';
+        //Check if the guessed word matches the word they have to guess
+        try{
+            if(text.toLowerCase() == WordToGuess.toLowerCase()){
+                socket.broadcast.to(roomid).emit('new-message-to-user','Server',`${username} guessed the word!`);
+                //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
+                socket.emit('new-message-to-user','Server','You guessed it!');
+                //You have to use update on the schema itself, not on the element of the room schema
+                const result = await Room.updateOne({'players.socketid' : socketid},{$set:{'players.$.guessedIt' : true}});
+                console.log(result);
+                const room = await Room.findOne({_id : roomid});
+                io.to(roomid).emit('updateRoom',room);
+                return cb(null,true);
+            }
+            //If the word does not match one on one, we check how many letters are matching
+            let diff = 0;
+            for(let i = 0;i < WordToGuess.length;i++){
+                text.toLowerCase().charAt(i) != WordToGuess.toLowerCase().charAt(i) && diff++;
+            }
+            //if the difference is only one letter, we allert the user it was close
+            if(diff < 1){
+                socket.broadcast.to(roomid).emit('new-message-to-user',username, text);
+                //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
+                socket.emit('new-message-to-user','Server',`The word ${text} is close!`);
+                return cb(null,false);
+            }
+            else
+                io.to(roomid).emit("new-message-to-user",username,text);
+            }
+        catch(e){
+            return cb(e,null);
+        }
     });
 
     socket.on("Join",async function(params,cb){
@@ -129,11 +160,13 @@ io.on("connection", (socket) => {
 
             const room = await JoinRoom(params.name,params.id,params.lang,cb);
             if(room){
-                socket.join(room._id.valueOf());
+                const id = room._id.valueOf();
+                socket.join(id);
                 //console.log(socket.rooms);
                 //io.to(room._id).emit('updateRoom',room);
-                socket.broadcast.to(room._id.valueOf()).emit('updateRoom',room);
-                console.log(room._id.valueOf());
+                socket.broadcast.to(id).emit('updateRoom',room);
+                console.log(id);
+                socket.broadcast.to(id).emit("new-message-to-user",'Server',`${params.name} has joined!`);
                 return cb(room,null);
             }
         }
@@ -166,6 +199,7 @@ io.on("connection", (socket) => {
                 room = await Room.findOne({_id : params.roomid});
                 //Sending to every user in the room the new roomdata
                 socket.broadcast.to(params.roomid).emit('updateRoom',room);
+                socket.broadcast.to(params.roomid).emit('new-message-to-user','Server',`${params.username} has left!`);
             }else{
                 const status = await deleteRoom(params.roomid);
                 console.log("Room deleting status : "+status.acknowledged);

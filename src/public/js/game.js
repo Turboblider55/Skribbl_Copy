@@ -7,10 +7,29 @@ let username = '';
 let roomid = '';
 let Joined = false;
 let isLeader = false;
-let current_room;
+let current_room = {};
+let isGuessed  = false;
 
 function validateName(name){
     return name.trim().length > 0;
+}
+
+function sendMessage(event,obj){
+    if(event.key == 'Enter'){
+        event.preventDefault();
+        const text = obj.value;
+        if(text.trim().length > 0){
+            socket.emit("new-message-to-server",roomid,socketid,username,text,isGuessed,function(err,res){
+                if(err){
+                    console.log(err)
+                    return;
+                }
+                isGuessed = res;
+                console.log(isGuessed)
+            });
+            obj.value = '';
+        }
+    }
 }
 
 function gameon(){
@@ -27,10 +46,9 @@ function gameoff(){
  function Disconnect(){
     if(Joined){
         gameoff();
-        socket.emit("leave",{roomid , socketid})
+        socket.emit("leave",{roomid , socketid , username})
     }
 }
-
 
 function JoinRoom(){
     const u = document.querySelector("#username").value;
@@ -51,7 +69,6 @@ function JoinRoom(){
             if(err){
                 console.log(err);
             }
-            else{
                 roomid = data._id.valueOf();
                 //console.log(data.players.find(user=> user.socketid == socketid).isPartyLeader);
                 isLeader = data.players.find(user=> user.socketid == socketid).isPartyLeader;
@@ -61,7 +78,6 @@ function JoinRoom(){
                 console.log('No error here!');
                 Joined = true;
                 gameon();
-            }
         })
     }
     else{

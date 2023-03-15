@@ -36,3 +36,8 @@ canvas{
     height: 400px;
     background-color: gray;
 }
+.message{
+    text-align: left;
+    color:black;
+    margin: 5px 10px 5px 10px;
+}

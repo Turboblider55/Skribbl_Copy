@@ -14,6 +14,14 @@ const userSchema = new mongoose.Schema({
         type : Boolean,
         default : false,
     },
+    guessedIt : {
+        type: Boolean,
+        default: false,
+    },
+    isDrawing : {
+        type : Boolean, 
+        default : false
+    },
     points : {
         type : Number,
         default : 0,

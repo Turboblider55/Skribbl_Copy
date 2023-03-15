@@ -3,7 +3,6 @@ const holder = document.querySelector("#Main-Area");
 const tools = document.querySelector("#Tools");
 const chat = document.querySelector("#Chat")
 const message_input = document.querySelector("#message_input");
-//console.log(holder.offsetLeft)
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 
 let TOOL = 'pen';
@@ -12,14 +11,7 @@ const SetCurrentTool = function(tool){
     TOOL = tool;
 }
 
-function sendMessage(event,obj){
-    if(event.key == 'Enter'){
-        event.preventDefault();
-        const text = obj.value;
-        socket.emit("new-message-to-server",roomid,username,text);
-        obj.value = '';
-    }
-}
+let Paint_Data = [];
 
 // message_input.addEventListener("keydown",function(event){
 
@@ -74,7 +66,7 @@ canvas.addEventListener('mousemove',event=>{
         STATES.CURR.y = event.clientY;
         STATES.PREV.x = event.clientX;
         STATES.PREV.y = event.clientY;
-
+        
         STATES.MOUSEPREV = true;
     }
     if(STATES.MOUSEDOWN){
@@ -94,7 +86,7 @@ socket.on('paint_to_user',function(color,pos1,pos2,width){
 });
 
 socket.on('new-message-to-user',function(username,text){
-    chat.insertAdjacentHTML('afterbegin',`<div>${username}: ${text}</div>`);
+    chat.insertAdjacentHTML('beforeend',`<div class='message'>${username}: ${text}</div>`);
 });
 
 const loop = () => {
@@ -105,6 +97,7 @@ const loop = () => {
             const new_prev = Vec2.Sub(offset,STATES.PREV);
             const new_curr = Vec2.Sub(offset,STATES.CURR);
             Draw(ctx,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
+            //Paint_Data.push({colorindex:STATES.COLOR,prev : new_prev, curr : new_curr, canvas_width : canvas.width});
             if(connected){
                 console.log("this code runs!");
                 socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
