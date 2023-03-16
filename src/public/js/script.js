@@ -3,8 +3,8 @@ const holder = document.querySelector("#Main-Area");
 const tools = document.querySelector("#Tools");
 const chat = document.querySelector("#Chat")
 const message_input = document.querySelector("#message_input");
+const player_container = document.querySelector("#player_container");
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
-
 let TOOL = 'pen';
 
 const SetCurrentTool = function(tool){
@@ -39,6 +39,15 @@ const setColor = (index) => {
     STATES.COLOR = index;
 }
 
+const renderPlayers = function(room){
+    player_container.innerHTML = room.players.map(function(player){
+        if(player.username == username)
+            return `<div class='You'>${player.username} (You)</div>`;
+        else
+            return `<div>${player.username} </div>`;
+    }).join("\n");
+}
+
 RenderPaletta(tools,setColor);
 
 // let OFFSETX = holder.offsetLeft + canvas.offsetLeft;
@@ -48,12 +57,12 @@ RenderPaletta(tools,setColor);
 // canvas.height = window.innerHeight;
 
 
-canvas.addEventListener('mousedown',event=>{
+canvas.addEventListener('mousedown',function(event){
     if(event.button == 0){
         STATES.MOUSEDOWN = true;
     }
 });
-canvas.addEventListener('mouseup',event=>{
+canvas.addEventListener('mouseup',function(event){
     if(event.button == 0){
         STATES.MOUSEDOWN = false;
         STATES.MOUSEPREV = false;
@@ -89,6 +98,18 @@ socket.on('new-message-to-user',function(username,text){
     chat.insertAdjacentHTML('beforeend',`<div class='message'>${username}: ${text}</div>`);
 });
 
+socket.on('paint_data_request',function(id){
+    socket.emit('paint_data_to_server',{user : id, paint_data : Paint_Data});
+});
+
+socket.on('paint_data_to_user',function(data){
+    console.log('New painting data arrived!');
+    console.log(data);
+    for(let i of data){
+        Draw(ctx,i.color,i.prev,i.curr,i.width);
+    }
+});
+
 const loop = () => {
     if(isLeader)
     if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
@@ -100,6 +121,7 @@ const loop = () => {
             //Paint_Data.push({colorindex:STATES.COLOR,prev : new_prev, curr : new_curr, canvas_width : canvas.width});
             if(connected){
                 console.log("this code runs!");
+                Paint_Data.push({color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
                 socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
             }
         }

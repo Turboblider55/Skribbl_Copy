@@ -77,6 +77,7 @@ function JoinRoom(){
                 //console.log(data);
                 console.log('No error here!');
                 Joined = true;
+                renderPlayers(data);
                 gameon();
         })
     }
@@ -97,6 +98,7 @@ socket.on("updateRoom",function(room){
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
     //console.log(isLeader);
     current_room = room;
+    renderPlayers(room);
 })
 
 socket.on('disconnect', function(){

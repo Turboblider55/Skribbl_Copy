@@ -167,6 +167,12 @@ io.on("connection", (socket) => {
                 socket.broadcast.to(id).emit('updateRoom',room);
                 console.log(id);
                 socket.broadcast.to(id).emit("new-message-to-user",'Server',`${params.name} has joined!`);
+                const user = room.players.find(player=>player.isPartyLeader = true);
+                console.log(user);
+                if(user)
+                    if(user.username != params.name)
+                        socket.to(user.socketid).emit('paint_data_request',params.id);
+
                 return cb(room,null);
             }
         }
@@ -174,6 +180,10 @@ io.on("connection", (socket) => {
             return cb(null,"Something went wrong!");
         }
     });
+
+    socket.on('paint_data_to_server',(data) => {
+        socket.to(data.user).emit('paint_data_to_user',data.paint_data);
+    })
 
     socket.on('disconnect',()=>{
         console.log("A user just disconnected from the server.");
