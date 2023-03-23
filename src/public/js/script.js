@@ -40,11 +40,20 @@ const setColor = (index) => {
 }
 
 const renderPlayers = function(room){
+    // console.log(room.players)
+    // room.players = room.players.sort((a,b)=> a.username - b.username);
+    // console.log(room.players);
+
+    let arr = [];
+    for(let player of room.players)
+        arr.push(player.points);
+    
+    let points_arr = [...new Set(arr)];
     player_container.innerHTML = room.players.map(function(player){
         if(player.username == username)
-            return `<div class='You'>${player.username} (You)</div>`;
+            return `<div class='SpaceBetween'><span>#${points_arr.indexOf(player.points) + 1}</span><span class='You'>${player.username} (You)</span></div>`;
         else
-            return `<div>${player.username} </div>`;
+            return `<div class='SpaceBetween'><span>#${points_arr.indexOf(player.points) + 1}</span> <span>${player.username}</span></div>`;
     }).join("\n");
 }
 
@@ -94,8 +103,8 @@ socket.on('paint_to_user',function(color,pos1,pos2,width){
     Draw(ctx,color,pos1,pos2,width);
 });
 
-socket.on('new-message-to-user',function(username,text){
-    chat.insertAdjacentHTML('beforeend',`<div class='message'>${username}: ${text}</div>`);
+socket.on('new-message-to-user',function(username,text,type){
+    chat.insertAdjacentHTML('beforeend',`<div class='message ${type.substring(0,type.length)}'> <span class='user'>${username}:</span> <span class='text'>${text}</span></div>`);
 });
 
 socket.on('paint_data_request',function(id){
@@ -111,22 +120,25 @@ socket.on('paint_data_to_user',function(data){
 });
 
 const loop = () => {
-    if(isLeader)
-    if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
-        if(TOOL == 'pen'){
-            const offset = new vec2(canvas.offsetLeft,canvas.offsetTop);
-            const new_prev = Vec2.Sub(offset,STATES.PREV);
-            const new_curr = Vec2.Sub(offset,STATES.CURR);
-            Draw(ctx,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
-            //Paint_Data.push({colorindex:STATES.COLOR,prev : new_prev, curr : new_curr, canvas_width : canvas.width});
-            if(connected){
-                console.log("this code runs!");
-                Paint_Data.push({color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
-                socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
+    if(isDrawing){
+        if(MyTimer == null && GameIsOn)
+            MyTimer = setInterval(ChangeTimer,1000);
+        if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
+            if(TOOL == 'pen'){
+                const offset = new vec2(canvas.offsetLeft,canvas.offsetTop);
+                const new_prev = Vec2.Sub(offset,STATES.PREV);
+                const new_curr = Vec2.Sub(offset,STATES.CURR);
+                Draw(ctx,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
+                //Paint_Data.push({colorindex:STATES.COLOR,prev : new_prev, curr : new_curr, canvas_width : canvas.width});
+                if(connected){
+                    console.log("this code runs!");
+                    Paint_Data.push({color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
+                    socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
+                }
             }
+            else
+                Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);
         }
-        else
-            Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);
     }
     requestAnimationFrame(loop)
 }

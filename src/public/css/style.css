@@ -4,6 +4,12 @@
     justify-content: center;
 }
 
+.SpaceBetween{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 body{
     background-color: gray;
     flex-direction: column;
@@ -43,5 +49,64 @@ canvas{
 }
 .You{
     color:cyan;
+    font-weight: bold;
+}
+
+.Normal{
+    background-color: gray;
+}
+.Normal .user{
+    font-weight: bold;
+    color:black;
+}
+.Normal .text{
+    color:black;
+}
+
+.Guessed{
+    background-color: lightgreen;
+}
+.Guessed .user{
+    font-weight: bold;
+    color:green;
+}
+.Guessed .text{
+    color:green;
+}
+
+.Leave{
+    background-color: gray;
+}
+.Leave .user{
+    font-weight: bold;
+    color:darkred;
+}
+.Leave .text{
+    color:darkred;
+}
+
+.Join{
+    background-color: gray;
+}
+.Join .user{
+    font-weight: bold;
+    color:lightgreen;
+}
+.Join .text{
+    color:lightgreen;
+}
+
+.Close{
+    background-color: gray;
+}
+.Close .user{
+    font-weight: bold;
+    color:lightgreen;
+}
+.Close .text{
+    color:lightgreen;
+}
+
+.Close .text span {
     font-weight: bold;
 }

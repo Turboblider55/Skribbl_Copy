@@ -3,12 +3,12 @@ const {usermodel,userSchema} = require('./user');
 
 const roomSchema = new mongoose.Schema({
     players : [userSchema],
-    
     maxPlayerCount : {
         type : Number,
         default : 10,
         max : 10,
         min : 2,
+
     },
     lang :{
         type : String,
@@ -20,6 +20,10 @@ const roomSchema = new mongoose.Schema({
         min : 15,
         max : 240,
     },
+    currentTime : {
+        type : Number,
+        default : 120,
+    },
     maxRound : {
         type : Number,
         default : 1,
@@ -27,6 +31,10 @@ const roomSchema = new mongoose.Schema({
     currRound : {
         type : Number,
         default : 1,
+    },
+    turnIndex : {
+        type : Number,
+        default : 0
     },
     word : {
         type : String,

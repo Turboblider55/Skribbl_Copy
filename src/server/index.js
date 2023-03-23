@@ -44,20 +44,28 @@ io.on("connection", (socket) => {
         }
     }
 
+    const SendToGuessedUsers = function(room,user,text){
+        //Not so efficient, we have to send the message individually, but there are no other options i could find to do it only on the server side
+        for(let player of room.players){
+            if(player.guessedIt || player.isDrawing)
+                io.to(player.socketid).emit("new-message-to-user",user,text,'Guessed');
+        }
+    }
+
     const createRoom = async function( def , username , socketid , lang , cb , maxPlayerCount , maxRound , DrawTime ) {
         try{
             if(def == 1){
-                const room = new Room({lang : lang});
+                const room = new Room({lang : lang, currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true });
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
             }
             else{
-                const room = new Room({lang : lang , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
+                const room = new Room({lang : lang , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime , currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true });
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
@@ -67,6 +75,81 @@ io.on("connection", (socket) => {
             return cb(err);
         }
     }
+
+    const SetToDefault = async (room) => {
+        for(let player of room.players){
+            player.guessedIt = false;
+            player.isDrawing = false;
+        }
+        await room.save();
+        room = await Room.findOne({_id : room._id});
+        room.currentTime = room.DrawTime;
+        await room.save();
+    }
+
+    const EndGame = async (room) => {
+        console.log('End of the game!');
+        await SetToDefault(room);
+        io.to(room._id.valueOf()).emit('end-of-game',room);
+    }
+
+    const ChangeRound = async (room) => {
+        try{
+            if(room.currRound < room.maxRound){
+                await SetToDefault(room);
+                room.turnIndex = 0;
+                room.players[0].isDrawing = true;
+                room.players[0].guessedIt = false;
+                room.currRound++;
+                await room.save();
+                //room = await Room.find({_id : room._id});
+                io.to(room._id.valueOf()).emit('change-round',room);
+                return;
+            }
+            //if(room.currRound == room.maxRound)
+                return await EndGame(room);
+        }catch(err){
+            console.log(err);
+        }
+
+    }
+
+    const TurnIsOver = (room) => {
+        let counter = 0
+        for(let player of room.players){
+            if(player.isDrawing || player.guessedIt) counter++;
+        }
+        return counter == room.players.length;
+    }
+
+    const ChangeTurn = async (room) => {
+        //console.log(room);
+        try{
+            //console.log(room.turnIndex + 1 < room.players.length);
+            if(room.turnIndex + 1 < room.players.length){
+                await SetToDefault(room);
+                room.turnIndex++;
+                //console.log(room.turnIndex);
+                room.players[room.turnIndex].isDrawing = true;
+                room.players[room.turnIndex].guessedIt = false;
+                await room.save();
+                //room = await Room.find({_id : room._id});
+                //console.log(room);
+                //You have to user the valueof function to get only the id
+                io.to(room._id.valueOf()).emit('change-turn',room);
+                return;
+            }
+            //If the turnindex + 1 is not less than players.length, than it must be equal, 
+            //Since we only increment by one every time
+            // if(room.turnIndex + 1 == room.players.length){
+                //console.log('This code runs!');
+                return await ChangeRound(room);
+            // }
+        }catch(err){
+            console.log(err);
+        }
+    }
+
 
     const JoinRoom = async function( username , socketid , lang , cb) {
 
@@ -78,11 +161,12 @@ io.on("connection", (socket) => {
             //     console.error("error: "+err);
             // });
             try{
-                const room = await Room.findOne({lang : lang});
+                //The order really matters in the query, first lt, then size and not reverse
+                const room = await Room.findOne({lang : lang, players : {$lt : {$size : '$maxPlayerCount'}}});
                 //console.log(room);
                 if(room){
                     //console.log(room);
-                    const user =  new usermodel({username : username,socketid : socketid});
+                    //const user =  new usermodel({username : username,socketid : socketid});
                     //console.log(user);
                     //room.updateOne({$push : {players : {name : name,socketid : socketid}}});
                     room.players.push({username : username,socketid : socketid});
@@ -114,70 +198,105 @@ io.on("connection", (socket) => {
         //console.log(room);
     }
 
+    socket.on('Change-Timer',async (roomid,time)=>{
+        //console.log('Time is sent');
+        let room = await Room.findOne({_id : roomid});
+        if(room){
+            room.currentTime = time;
+            await room.save();
+            socket.to(roomid).emit('Change-Timer',time);
+        }
+    });
+
     socket.on('paint_to_server',(room,color,pos1,pos2,width)=>{
         socket.broadcast.to(room).emit('paint_to_user',color,pos1,pos2,width);
     });
 
-    socket.on("new-message-to-server",async (roomid , socketid , username , text , isGuessed, cb)=>{
+    socket.on("new-message-to-server",async (roomid , socketid , username , text , isGuessed, isDrawing, cb)=>{
         const WordToGuess = 'TesztSzo';
         //Check if the guessed word matches the word they have to guess
         try{
-            if(text.toLowerCase() == WordToGuess.toLowerCase()){
-                socket.broadcast.to(roomid).emit('new-message-to-user','Server',`${username} guessed the word!`);
-                //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
-                socket.emit('new-message-to-user','Server','You guessed it!');
-                //You have to use update on the schema itself, not on the element of the room schema
-                const result = await Room.updateOne({'players.socketid' : socketid},{$set:{'players.$.guessedIt' : true}});
-                console.log(result);
-                const room = await Room.findOne({_id : roomid});
-                io.to(roomid).emit('updateRoom',room);
-                return cb(null,true);
+            let room = await Room.findOne({_id : roomid});
+            if(room){
+                if(isGuessed || isDrawing){
+                    console.log('IS guessed or drawing');
+                    SendToGuessedUsers(room,username,text);
+                    return;
+                }
+
+                if(!isGuessed){
+                    if(text.toLowerCase() == WordToGuess.toLowerCase()){
+                        socket.broadcast.to(roomid).emit('new-message-to-user','Server',`${username} guessed the word!`,'Guessed');
+                        //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
+                        socket.emit('new-message-to-user','Server','You guessed it!','Guessed');
+                        //You have to use update on the schema itself, not on the element of the room schema
+                        const result = await Room.updateOne({'players.socketid' : socketid},{$set:{'players.$.guessedIt' : true}});
+                        //console.log(result);
+                        room = await Room.findOne({_id : roomid});
+                        
+                        if(TurnIsOver(room)){
+                            await ChangeTurn(room);
+                            console.log("Turn is Over!");
+                            return;
+                        }
+                        
+                        io.to(roomid).emit('updateRoom',room);
+                        return cb(null,true);
+                    }
+                    //If the word does not match one on one, we check how many letters are matching
+                    let diff = 0;
+                    for(let i = 0;i < WordToGuess.length;i++){
+                        text.toLowerCase().charAt(i) != WordToGuess.toLowerCase().charAt(i) && diff++;
+                    }
+                    //if the difference is only one letter, we allert the user it was close
+                    if(diff < 2){
+                        socket.broadcast.to(roomid).emit('new-message-to-user',username, text,'Normal');
+                        //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
+                        socket.emit('new-message-to-user','Server',`The word <span>${text}</span> is close!`,'Close');
+                        return cb(null,false);
+                    }
+                    else{
+                        io.to(roomid).emit("new-message-to-user",username,text,'Normal');
+                        return;
+                    }
+                }
             }
-            //If the word does not match one on one, we check how many letters are matching
-            let diff = 0;
-            for(let i = 0;i < WordToGuess.length;i++){
-                text.toLowerCase().charAt(i) != WordToGuess.toLowerCase().charAt(i) && diff++;
-            }
-            //if the difference is only one letter, we allert the user it was close
-            if(diff < 1){
-                socket.broadcast.to(roomid).emit('new-message-to-user',username, text);
-                //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
-                socket.emit('new-message-to-user','Server',`The word ${text} is close!`);
-                return cb(null,false);
-            }
-            else
-                io.to(roomid).emit("new-message-to-user",username,text);
-            }
-        catch(e){
+        }catch(e){
+            console.log(e);
             return cb(e,null);
         }
     });
 
     socket.on("Join",async function(params,cb){
-        if(params.name && params.lang && params.id){
-            //console.log("Got everything!");
-            //console.log("name : "+params.name+", lang: "+params.lang);
+        try{
+            if(params.name && params.lang && params.id){
+                //console.log("Got everything!");
+                //console.log("name : "+params.name+", lang: "+params.lang);
 
-            const room = await JoinRoom(params.name,params.id,params.lang,cb);
-            if(room){
-                const id = room._id.valueOf();
-                socket.join(id);
-                //console.log(socket.rooms);
-                //io.to(room._id).emit('updateRoom',room);
-                socket.broadcast.to(id).emit('updateRoom',room);
-                console.log(id);
-                socket.broadcast.to(id).emit("new-message-to-user",'Server',`${params.name} has joined!`);
-                const user = room.players.find(player=>player.isPartyLeader = true);
-                console.log(user);
-                if(user)
-                    if(user.username != params.name)
-                        socket.to(user.socketid).emit('paint_data_request',params.id);
+                const room = await JoinRoom(params.name,params.id,params.lang,cb);
+                if(room){
+                    const id = room._id.valueOf();
+                    socket.join(id);
+                    //console.log(socket.rooms);
+                    //io.to(room._id).emit('updateRoom',room);
+                    socket.broadcast.to(id).emit('updateRoom',room);
+                    console.log(id);
+                    socket.broadcast.to(id).emit("new-message-to-user",'Server',`${params.name} joined the room!`,'Join');
+                    const user = room.players.find(player=>player.isDrawing == true);
+                    //console.log(user);
+                    if(user)
+                        if(user.username != params.name)
+                            socket.to(user.socketid).emit('paint_data_request',params.id);
 
-                return cb(room,null);
+                    return cb(room,null);
+                }
             }
-        }
-        else{
-            return cb(null,"Something went wrong!");
+            else{
+                return cb(null,"Something went wrong!");
+            }
+        }catch(err){
+            console.log(err);
+            return cb(null, err);
         }
     });
 
@@ -190,30 +309,49 @@ io.on("connection", (socket) => {
     });
 
     socket.on("leave",async function(params){
-        let room = await Room.findOne({_id : params.roomid});
-        //console.log("This code runs when the page is refreshed!");
-        
-        if(room){
-            //if we find a room with a matching roomid, then we leave the socket room and the mongodb room too
-            socket.leave(params.roomid);
+        try{
+            let room = await Room.findOne({_id : params.roomid});
+            //console.log("This code runs when the page is refreshed!");
+            if(room){
+                //if we find a room with a matching roomid, then we leave the socket room and the mongodb room too
+                socket.leave(params.roomid);
 
-            if(room.players.length > 1){
-                //We can only do one task at once, we have to save and fetch the room again between tasks
-                console.log("Room found!");
-                room.players.pull({socketid : params.socketid});
-                await room.save();
-                room = await Room.findOne({_id : params.roomid});
-                room.players[0].isPartyLeader = true;
-                await room.save();
-                //for some reason, it won't update the local variable, so we have to fetch the updated one
-                room = await Room.findOne({_id : params.roomid});
-                //Sending to every user in the room the new roomdata
-                socket.broadcast.to(params.roomid).emit('updateRoom',room);
-                socket.broadcast.to(params.roomid).emit('new-message-to-user','Server',`${params.username} has left!`);
-            }else{
-                const status = await deleteRoom(params.roomid);
-                console.log("Room deleting status : "+status.acknowledged);
+                if(room.players.length > 1){
+                    //We can only do one task at once, we have to save and fetch the room again between tasks
+                    console.log("Room found!");
+                    room.players.pull({socketid : params.socketid});
+                    await room.save();
+                    room = await Room.findOne({_id : params.roomid});
+                    room.players[0].isPartyLeader = true;
+                    await room.save();
+                    //for some reason, it won't update the local variable, so we have to fetch the updated one
+                    room = await Room.findOne({_id : params.roomid});
+                    //Sending to every user in the room the new roomdata
+                    socket.broadcast.to(params.roomid).emit('updateRoom',room);
+                    socket.broadcast.to(params.roomid).emit('new-message-to-user','Server',`${params.username} left the room!`,'Leave');
+                    
+                    if(params.isDrawing){
+                        //console.log(room.turnIndex + 1 < room.players.length);
+                        if(room.turnIndex + 1 < room.players.length){
+                            await SetToDefault(room);
+                            room.players[room.turnIndex].isDrawing = true;
+                            room.players[room.turnIndex].guessedIt = false;
+                            await room.save();
+                            //You have to user the valueof function to get only the id
+                            io.to(room._id.valueOf()).emit('change-turn',room);
+                            return;
+                        }
+                        //If the turnindex + 1 is not less than players.length, than it must be equal, 
+                        //Since we only increment by one every time
+                        return await ChangeRound(room);
+                    }
+                }else{
+                    const status = await deleteRoom(params.roomid);
+                    console.log("Room deleting status : "+status.acknowledged);
+                }
             }
+        }catch(err){
+            console.log(err);
         }
     });
 })
