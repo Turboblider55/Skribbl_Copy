@@ -39,6 +39,10 @@ const roomSchema = new mongoose.Schema({
     word : {
         type : String,
     },
+    guessedCounter : {
+        type : Number,
+        default : 0
+    }
 });
 
 module.exports = mongoose.model('Room',roomSchema);

@@ -121,8 +121,13 @@ socket.on('paint_data_to_user',function(data){
 
 const loop = () => {
     if(isDrawing){
-        if(MyTimer == null && GameIsOn)
+        //console.log(MyTimer == null, GameIsOn, playerCount > 1);
+        if(MyTimer == null && GameIsOn && playerCount > 1){
+            console.log('This is true');
             MyTimer = setInterval(ChangeTimer,1000);
+        }
+        if(playerCount == 1)
+            EndOfGame();
         if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
             if(TOOL == 'pen'){
                 const offset = new vec2(canvas.offsetLeft,canvas.offsetTop);

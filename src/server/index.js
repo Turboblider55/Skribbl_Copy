@@ -57,7 +57,7 @@ io.on("connection", (socket) => {
             if(def == 1){
                 const room = new Room({lang : lang, currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true});
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
             else{
                 const room = new Room({lang : lang , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime , currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true});
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
@@ -76,15 +76,41 @@ io.on("connection", (socket) => {
         }
     }
 
+    const CalculatePoints = async (room) => {
+        //If noone guessed, than for now we don't do anything
+        if(room.guessedCounter == 0)
+            return;
+        
+        const maxPoint = (room.guessedCounter + 1) * 80;
+        for(let player of room.players){
+            if(player.guessedIndex == 0){
+                player.points += maxPoint - 80;
+            }
+            if(player.guessedIndex != -1){
+                player.points += maxPoint - (player.guessedIndex - 1) * 80 ;
+            }
+        }
+
+        await room.save();
+        console.log(room);
+        return;
+    }
+
     const SetToDefault = async (room) => {
         for(let player of room.players){
             player.guessedIt = false;
             player.isDrawing = false;
+            player.guessedIndex = -1;
         }
         await room.save();
         room = await Room.findOne({_id : room._id});
         room.currentTime = room.DrawTime;
         await room.save();
+        room = await Room.findOne({_id : room._id});
+        room.guessedCounter = 0;
+        console.log(room);
+        await room.save();
+        room = await Room.findOne({_id : room._id});
     }
 
     const EndGame = async (room) => {
@@ -96,10 +122,12 @@ io.on("connection", (socket) => {
     const ChangeRound = async (room) => {
         try{
             if(room.currRound < room.maxRound){
+                await CalculatePoints(room);
                 await SetToDefault(room);
                 room.turnIndex = 0;
                 room.players[0].isDrawing = true;
                 room.players[0].guessedIt = false;
+                room.players[0].guessedIndex = 0;
                 room.currRound++;
                 await room.save();
                 //room = await Room.find({_id : room._id});
@@ -122,16 +150,38 @@ io.on("connection", (socket) => {
         return counter == room.players.length;
     }
 
+    const IncreaseGuessedUsers = async (room, socketid) => {
+        try{
+            const user = room.players.find(player=>player.socketid == socketid);
+
+            if(!user)
+                return;
+            
+            const index = room.players.indexOf(user);
+            room.guessedCounter++;
+            
+            // await room.save();
+            // room = await Room.findOne({_id : room._id});
+
+            room.players[index].guessedIndex = room.guessedCounter;
+            await room.save();
+        }catch(err){
+            console.log(err);
+        }
+    }
+
     const ChangeTurn = async (room) => {
         //console.log(room);
         try{
             //console.log(room.turnIndex + 1 < room.players.length);
             if(room.turnIndex + 1 < room.players.length){
+                await CalculatePoints(room);
                 await SetToDefault(room);
                 room.turnIndex++;
                 //console.log(room.turnIndex);
                 room.players[room.turnIndex].isDrawing = true;
                 room.players[room.turnIndex].guessedIt = false;
+                room.players[room.turnIndex].guessedIndex = 0;
                 await room.save();
                 //room = await Room.find({_id : room._id});
                 //console.log(room);
@@ -219,7 +269,7 @@ io.on("connection", (socket) => {
             let room = await Room.findOne({_id : roomid});
             if(room){
                 if(isGuessed || isDrawing){
-                    console.log('IS guessed or drawing');
+                    //console.log('IS guessed or drawing');
                     SendToGuessedUsers(room,username,text);
                     return;
                 }
@@ -233,7 +283,7 @@ io.on("connection", (socket) => {
                         const result = await Room.updateOne({'players.socketid' : socketid},{$set:{'players.$.guessedIt' : true}});
                         //console.log(result);
                         room = await Room.findOne({_id : roomid});
-                        
+                        await IncreaseGuessedUsers(room,socketid);
                         if(TurnIsOver(room)){
                             await ChangeTurn(room);
                             console.log("Turn is Over!");

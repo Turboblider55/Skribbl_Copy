@@ -13,6 +13,7 @@ let isDrawing = false;
 let GameIsOn = false;
 let Timer = -1;
 let MyTimer = null;
+let playerCount = 0;
 
 function validateName(name){
     return name.trim().length > 0;
@@ -20,7 +21,7 @@ function validateName(name){
 
 function ChangeTimer(){
     if(Timer != -1 && Timer > 0){
-        console.log('Time is sent');
+        //console.log('Time is sent');
         Timer--;
         console.log(Timer);
         socket.emit('Change-Timer',roomid,Timer);
@@ -48,20 +49,28 @@ function sendMessage(event,obj){
 function gameon(){
     document.querySelector("#game").style.display = 'flex';
     document.querySelector("#lobby").style.display = 'none';
-    //console.log("Hello");
-    GameIsOn = true;
+    Joined = true;
 }
 function gameoff(){
     document.querySelector("#game").style.display = 'none';
     document.querySelector("#lobby").style.display = 'flex';
-    //console.log("Hello");
-    GameIsOn = false;
+    Joined = false;
 }
 
  function Disconnect(){
     if(Joined){
         gameoff();
         socket.emit("leave",{roomid , socketid , username , isDrawing})
+        EndOfGame();
+    }
+}
+
+function EndOfGame(){
+    if(GameIsOn){
+        console.log('End of game!');
+        clearInterval(MyTimer);
+        GameIsOn = false;
+        isGuessed = false;
     }
 }
 
@@ -111,16 +120,7 @@ socket.on('Change-Timer',function(time){
 });
 
 socket.on('end-of-game',function(room){
-    console.log('End of game!');
-    //console.log('New room data');
-    console.log(room);
-    isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
-    isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
-    //console.log(isLeader);
-    current_room = room;
-    renderPlayers(room);
-    clearInterval(MyTimer);
-    GameIsOn = false;
+    EndOfGame();
 });
 
 socket.on("connect",function(){
@@ -138,6 +138,8 @@ socket.on("updateRoom",function(room){
     //console.log(isLeader);
     current_room = room;
     renderPlayers(room);
+    playerCount = room.players.length;
+    GameIsOn = playerCount > 1 ? true : false;
 })
 
 socket.on('change-turn',function(room){
@@ -147,9 +149,12 @@ socket.on('change-turn',function(room){
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
     current_room = room;
     renderPlayers(room);
+    if(MyTimer)
     clearInterval(MyTimer);
     Timer = room.DrawTime;
     isGuessed = false;
+    playerCount = room.players.length;
+    GameIsOn = playerCount > 1 ? true : false;
 });
 
 socket.on('change-round',function(room){
@@ -159,9 +164,12 @@ socket.on('change-round',function(room){
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
     current_room = room;
     renderPlayers(room);
+    if(MyTimer)
     clearInterval(MyTimer);
     Timer = room.DrawTime;
     isGuessed = false;
+    playerCount = room.players.length;
+    GameIsOn = playerCount > 1 ? true : false;
 });
 socket.on('disconnect', function(){
     console.log('Disconnected from server');

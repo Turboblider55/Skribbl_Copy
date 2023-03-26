@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    guessedIndex : {
+        type : Number,
+        default : -1
+    },
     isDrawing : {
         type : Boolean, 
         default : false
