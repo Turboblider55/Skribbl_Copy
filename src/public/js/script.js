@@ -4,6 +4,7 @@ const tools = document.querySelector("#Tools");
 const chat = document.querySelector("#Chat")
 const message_input = document.querySelector("#message_input");
 const player_container = document.querySelector("#player_container");
+const time_container = document.querySelector('#time_container');
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
 
@@ -33,10 +34,14 @@ let STATES = {
     PREV : new vec2(0,0)
 }
 
-const setColor = (index) => {
+const setColor = function (index) {
     console.log(index);
     //console.log("Check")
     STATES.COLOR = index;
+}
+
+const renderTimer = function (time) {
+    time_container.innerHTML = time;
 }
 
 const renderPlayers = function(room){
@@ -50,10 +55,22 @@ const renderPlayers = function(room){
     
     let points_arr = [...new Set(arr)];
     player_container.innerHTML = room.players.map(function(player){
-        if(player.username == username)
-            return `<div class='SpaceBetween'><span>#${points_arr.indexOf(player.points) + 1}</span><span class='You'>${player.username} (You)</span></div>`;
+        if(player.socketid == socketid)
+            return `<div class='SpaceBetween'>
+            <span>#${points_arr.indexOf(player.points) + 1}</span>
+            <div class='player-data'>
+                <p class='You'>${player.username} (You)</p>
+                <p>${player.points}</p>
+            </div>
+            </div>`;
         else
-            return `<div class='SpaceBetween'><span>#${points_arr.indexOf(player.points) + 1}</span> <span>${player.username}</span></div>`;
+            return `<div class='SpaceBetween'>
+            <span>#${points_arr.indexOf(player.points) + 1}</span>
+            <div class='player-data'>
+                <p>${player.username}</p>
+                <p>${player.points}</p>
+            </div>
+            </div>`;
     }).join("\n");
 }
 
@@ -77,7 +94,7 @@ canvas.addEventListener('mouseup',function(event){
         STATES.MOUSEPREV = false;
     }
 });
-canvas.addEventListener('mousemove',event=>{
+canvas.addEventListener('mousemove',function(event){
     //console.log("Mouse Moved X: "+event.clientX);
     if(!STATES.MOUSEPREV && STATES.MOUSEDOWN){
         STATES.CURR.x = event.clientX;

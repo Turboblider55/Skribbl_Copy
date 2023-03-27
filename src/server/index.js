@@ -87,12 +87,12 @@ io.on("connection", (socket) => {
                 player.points += maxPoint - 80;
             }
             if(player.guessedIndex != -1){
+                console.log(player.guessedIndex);
                 player.points += maxPoint - (player.guessedIndex - 1) * 80 ;
             }
         }
-
         await room.save();
-        console.log(room);
+        //console.log(room);
         return;
     }
 
@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
         await room.save();
         room = await Room.findOne({_id : room._id});
         room.guessedCounter = 0;
-        console.log(room);
+        //console.log(room);
         await room.save();
         room = await Room.findOne({_id : room._id});
     }
@@ -255,6 +255,11 @@ io.on("connection", (socket) => {
             room.currentTime = time;
             await room.save();
             socket.to(roomid).emit('Change-Timer',time);
+            if(time == 0){
+                await ChangeTurn(room);
+                console.log("Turn is Over!");
+                return;
+            }
         }
     });
 

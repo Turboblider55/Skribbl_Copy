@@ -25,6 +25,7 @@ function ChangeTimer(){
         Timer--;
         console.log(Timer);
         socket.emit('Change-Timer',roomid,Timer);
+        renderTimer(Timer);
     }
 }
 
@@ -71,6 +72,11 @@ function EndOfGame(){
         clearInterval(MyTimer);
         GameIsOn = false;
         isGuessed = false;
+        isDrawing = false;
+        //Not needed for now,
+        // ctx.beginPath();
+        // ctx.fillRect(0,0,canvas.width,canvas.height);
+        // ctx.closePath();
     }
 }
 
@@ -116,10 +122,12 @@ function JoinRoom(){
 
 socket.on('Change-Timer',function(time){
     Timer = time;
-    console.log(Timer);
+    //console.log(Timer);
+    renderTimer(time);
 });
 
 socket.on('end-of-game',function(room){
+    console.log(room);
     EndOfGame();
 });
 

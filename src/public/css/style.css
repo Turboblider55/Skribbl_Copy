@@ -7,7 +7,7 @@
 .SpaceBetween{
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-around;
 }
 
 body{
@@ -36,6 +36,9 @@ canvas{
 }
 .Side_Panel{
     background-color: red;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 #Chat{
     width: 300px;
@@ -101,12 +104,16 @@ canvas{
 }
 .Close .user{
     font-weight: bold;
-    color:lightgreen;
+    color:gold;
 }
 .Close .text{
-    color:lightgreen;
+    color:gold;
 }
 
 .Close .text span {
     font-weight: bold;
+}
+.player-data p{
+    margin: 0px 5px 0px 5px;
+
 }
