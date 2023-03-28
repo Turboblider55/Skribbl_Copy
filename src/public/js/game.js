@@ -15,6 +15,12 @@ let Timer = -1;
 let MyTimer = null;
 let playerCount = 0;
 
+//by default, there are 26 body, 57 eye, and 51 mouth,
+//but we need to subtract 1, since we need the indexes
+let body_index = Math.floor(Math.random() * 25);
+let eye_index = Math.floor(Math.random() * 56);
+let mouth_index = Math.floor(Math.random() * 50);
+
 function validateName(name){
     return name.trim().length > 0;
 }
@@ -95,7 +101,7 @@ function JoinRoom(){
             console.log(username);
         }
 
-        socket.emit("Join",{name : username,lang : l,id : socketid},function(data,err){
+        socket.emit("Join",{name : username,lang : l,id : socketid, body : body_index, eye : eye_index, mouth : mouth_index},function(data,err){
             if(err){
                 console.log(err);
             }
@@ -127,7 +133,8 @@ socket.on('Change-Timer',function(time){
 });
 
 socket.on('end-of-game',function(room){
-    console.log(room);
+    //console.log(room);
+    renderPlayers(room);
     EndOfGame();
 });
 

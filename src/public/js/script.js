@@ -5,6 +5,7 @@ const chat = document.querySelector("#Chat")
 const message_input = document.querySelector("#message_input");
 const player_container = document.querySelector("#player_container");
 const time_container = document.querySelector('#time_container');
+const lobby_avatar = document.querySelector('#lobby_avatar');
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
 
@@ -40,6 +41,32 @@ const setColor = function (index) {
     STATES.COLOR = index;
 }
 
+const CreateAvatarText = function(body,eye,mouth){
+    return `
+    <div class='avatar'>
+        <div class='body' style='background-position : -${(body % 10) * 100}% -${Math.floor(body / 10) * 100}%'></div>
+        <div class='eye' style='background-position : -${(eye % 10) * 100}% -${Math.floor(eye / 10)  * 100}%'></div>
+        <div class='mouth' style='background-position : -${(mouth % 10) * 100}% -${Math.floor(mouth / 10)  * 100}%'></div>
+    </div>
+    `;
+}
+lobby_avatar.innerHTML = CreateAvatarText(body_index,eye_index,mouth_index);
+
+const ChangeAvatar = function(num){
+    switch(num){
+        case 1 : eye_index > 0 ? eye_index-- : eye_index = 56; break;
+        case 2 : mouth_index > 0 ? mouth_index-- : mouth_index = 50; break;
+        case 3 : body_index > 0 ? body_index-- : body_index = 25; break;
+        case 4 : eye_index < 56 ? eye_index++ : eye_index = 0; break;
+        case 5 : mouth_index < 50 ? mouth_index++ : mouth_index = 0; break;
+        case 6 : body_index < 25 ? body_index++ : body_index = 0; break;
+        default : break;
+    }
+    
+    lobby_avatar.innerHTML =  CreateAvatarText(body_index,eye_index,mouth_index);
+}
+
+
 const renderTimer = function (time) {
     time_container.innerHTML = time;
 }
@@ -62,6 +89,7 @@ const renderPlayers = function(room){
                 <p class='You'>${player.username} (You)</p>
                 <p>${player.points}</p>
             </div>
+            ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
             </div>`;
         else
             return `<div class='SpaceBetween'>
@@ -70,6 +98,7 @@ const renderPlayers = function(room){
                 <p>${player.username}</p>
                 <p>${player.points}</p>
             </div>
+            ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
             </div>`;
     }).join("\n");
 }

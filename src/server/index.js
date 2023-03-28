@@ -52,12 +52,12 @@ io.on("connection", (socket) => {
         }
     }
 
-    const createRoom = async function( def , username , socketid , lang , cb , maxPlayerCount , maxRound , DrawTime ) {
+    const createRoom = async function( def , username , socketid , lang , body, eye, mouth, cb , maxPlayerCount , maxRound , DrawTime ) {
         try{
             if(def == 1){
                 const room = new Room({lang : lang, currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0});
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0, body_index : body , eye_index : eye , mouth_index : mouth});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
             else{
                 const room = new Room({lang : lang , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime , currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0});
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0, body_index : body , eye_index : eye , mouth_index : mouth});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
@@ -85,10 +85,12 @@ io.on("connection", (socket) => {
         for(let player of room.players){
             if(player.guessedIndex == 0){
                 player.points += maxPoint - 80;
+                continue;
             }
             if(player.guessedIndex != -1){
                 console.log(player.guessedIndex);
                 player.points += maxPoint - (player.guessedIndex - 1) * 80 ;
+                continue;
             }
         }
         await room.save();
@@ -201,7 +203,7 @@ io.on("connection", (socket) => {
     }
 
 
-    const JoinRoom = async function( username , socketid , lang , cb) {
+    const JoinRoom = async function( username , socketid , lang , body , eye , mouth , cb) {
 
         //Another was to create a user with one function that will save it to the db
             // const room = new Room({name : 'Test2'});
@@ -219,13 +221,13 @@ io.on("connection", (socket) => {
                     //const user =  new usermodel({username : username,socketid : socketid});
                     //console.log(user);
                     //room.updateOne({$push : {players : {name : name,socketid : socketid}}});
-                    room.players.push({username : username,socketid : socketid});
+                    room.players.push({username : username,socketid : socketid, body_index : body, eye_index : eye, mouth_index : mouth});
                     await room.save();
                     return room;
                     //room = await room.save().then(()=>console.log("Saved")).catch((err)=>console.log("An error occured : "+err));
                 }
                 else{
-                    const room = await createRoom(1 , username , socketid , lang , cb);
+                    const room = await createRoom(1 , username , socketid , lang , body, eye, mouth, cb);
                     return room;
                     // console.log("No room found!");
                     // return cb("no room found");
@@ -328,7 +330,7 @@ io.on("connection", (socket) => {
                 //console.log("Got everything!");
                 //console.log("name : "+params.name+", lang: "+params.lang);
 
-                const room = await JoinRoom(params.name,params.id,params.lang,cb);
+                const room = await JoinRoom(params.name,params.id,params.lang, params.body, params.eye, params.mouth, cb);
                 if(room){
                     const id = room._id.valueOf();
                     socket.join(id);

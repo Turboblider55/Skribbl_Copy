@@ -117,3 +117,93 @@ canvas{
     margin: 0px 5px 0px 5px;
 
 }
+html{
+    height: 100vh;
+}
+body{
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    background-image: linear-gradient(black,snow);
+    background-image: url('../img/background.png');
+    background-repeat: repeat;
+}
+.container-column{
+    display: flex;
+    align-items: center;
+    justify-content: center;  
+    flex-direction: column; 
+}
+.OptionHolder{
+    background-color: gray;
+    padding: 20px;
+}
+.container-row{
+    display: flex;
+    align-items: center;
+    justify-content: center;  
+    flex-direction: row; 
+}
+.Arrows-Left div{
+    width: 17px;
+    height: 17px;
+    background: url('../img/arrow.gif') 0 0;
+}
+.Arrows-Left div:hover{
+    background-position: 17px 0;
+}
+.Arrows-Right div{
+    width: 17px;
+    height: 17px;
+    background: url('../img/arrow.gif') 0 17px;
+}
+.Arrows-Right div:hover{
+    background-position: 17px 17px;
+}
+.Main-Container{
+    height: 100vh;
+}
+.character{
+    width: 50px;
+}
+.red{
+    background-color: red;
+    width: 25px;
+    height: 25px;
+}
+.green{
+    background-color: green;
+    width: 25px;
+    height: 25px;
+}
+.blue{
+    background-color: blue;
+    width: 25px;
+    height: 25px;
+}
+.avatar {
+    position: relative;
+    width: 48px;
+    height: 48px;
+}
+.body{
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    background: url('../img/color_atlas.gif') 0 0;
+}
+.eye{
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    background: url('../img/eyes_atlas.gif') 0 0;
+}
+.mouth{
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    background: url('../img/mouth_atlas.gif') 0 0;
+}
+#lobby_avatar{
+    width: 48px;
+}

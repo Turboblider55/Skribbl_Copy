@@ -29,6 +29,18 @@ const userSchema = new mongoose.Schema({
     points : {
         type : Number,
         default : 0,
+    },
+    body_index : {
+        type : Number, 
+        default : 0
+    },
+    eye_index : {
+        type : Number, 
+        default : 0
+    },
+    mouth_index : {
+        type : Number, 
+        default : 0
     }
 });
 const usermodel = mongoose.model('User',userSchema); 
