@@ -73,7 +73,7 @@ function gameoff(){
 }
 
 function EndOfGame(){
-    if(GameIsOn){
+    console.log(GameIsOn);
         console.log('End of game!');
         clearInterval(MyTimer);
         GameIsOn = false;
@@ -83,7 +83,6 @@ function EndOfGame(){
         // ctx.beginPath();
         // ctx.fillRect(0,0,canvas.width,canvas.height);
         // ctx.closePath();
-    }
 }
 
 function JoinRoom(){

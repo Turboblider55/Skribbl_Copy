@@ -44,6 +44,8 @@ canvas{
     width: 300px;
     height: 400px;
     background-color: gray;
+    overflow-y: scroll;
+    overflow: hidden;
 }
 .message{
     text-align: left;
@@ -206,4 +208,9 @@ body{
 }
 #lobby_avatar{
     width: 48px;
+}
+.pen {
+    width: 24px;
+    height: 24px;
+    background: url('../img/how.gif');
 }

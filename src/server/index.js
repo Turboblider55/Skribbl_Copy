@@ -390,6 +390,7 @@ io.on("connection", (socket) => {
                     if(params.isDrawing){
                         //console.log(room.turnIndex + 1 < room.players.length);
                         if(room.turnIndex + 1 < room.players.length){
+                            await CalculatePoints(room);
                             await SetToDefault(room);
                             room.players[room.turnIndex].isDrawing = true;
                             room.players[room.turnIndex].guessedIt = false;
@@ -402,6 +403,8 @@ io.on("connection", (socket) => {
                         //Since we only increment by one every time
                         return await ChangeRound(room);
                     }
+                    if(room.players.length == 1)
+                        return EndGame(room);
                 }else{
                     const status = await deleteRoom(params.roomid);
                     console.log("Room deleting status : "+status.acknowledged);

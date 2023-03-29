@@ -82,24 +82,25 @@ const renderPlayers = function(room){
     
     let points_arr = [...new Set(arr)];
     player_container.innerHTML = room.players.map(function(player){
-        if(player.socketid == socketid)
+        //if(player.socketid == socketid)
             return `<div class='SpaceBetween'>
             <span>#${points_arr.indexOf(player.points) + 1}</span>
             <div class='player-data'>
-                <p class='You'>${player.username} (You)</p>
+                ${player.socketid == socketid ? `<p class='You'>${player.username} (You)</p>` : `<p>${player.username}</p>`}
                 <p>${player.points}</p>
             </div>
+            ${player.isDrawing ? "<div class='pen'></div>" : ""}
             ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
             </div>`;
-        else
-            return `<div class='SpaceBetween'>
-            <span>#${points_arr.indexOf(player.points) + 1}</span>
-            <div class='player-data'>
-                <p>${player.username}</p>
-                <p>${player.points}</p>
-            </div>
-            ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
-            </div>`;
+        //else
+            // return `<div class='SpaceBetween'>
+            // <span>#${points_arr.indexOf(player.points) + 1}</span>
+            // <div class='player-data'>
+            //     <p>${player.username}</p>
+            //     <p>${player.points}</p>
+            // </div>
+            // ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
+            // </div>`;
     }).join("\n");
 }
 
@@ -172,8 +173,6 @@ const loop = () => {
             console.log('This is true');
             MyTimer = setInterval(ChangeTimer,1000);
         }
-        if(playerCount == 1)
-            EndOfGame();
         if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
             if(TOOL == 'pen'){
                 const offset = new vec2(canvas.offsetLeft,canvas.offsetTop);
