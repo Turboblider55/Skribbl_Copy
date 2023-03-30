@@ -7,7 +7,7 @@
 .SpaceBetween{
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    justify-content: space-between;
 }
 
 body{
@@ -29,13 +29,16 @@ canvas{
     justify-content: space-around;
 }
 #Main-Area{
-    background-color: red;
+    background-color: snow;
     flex-wrap: wrap;
     flex-direction: column;
     padding: 10px;
+    grid-area: 'main';
+    width: 100%;
+    height: 100%;
 }
 .Side_Panel{
-    background-color: red;
+    background-color: snow;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -77,6 +80,9 @@ canvas{
 }
 .Guessed .text{
     color:green;
+}
+.guessedIt {
+    background-color: lightgreen;
 }
 
 .Leave{
@@ -125,8 +131,6 @@ html{
 body{
     margin: 0px;
     padding: 0px;
-    overflow: hidden;
-    background-image: linear-gradient(black,snow);
     background-image: url('../img/background.png');
     background-repeat: repeat;
 }
@@ -164,24 +168,22 @@ body{
 }
 .Main-Container{
     height: 100vh;
+    display: grid;
+    gap: 10px;
+    grid-template-areas: 'header header header''left-panel main right-panel';
+}
+#left-panel {
+    grid-area: left-panel;
+    width: 100%;
+    height: 100%;
+}
+#right-panel{
+    grid-area: right-panel;
+    width: 100%;
+    height: 100%;
 }
 .character{
     width: 50px;
-}
-.red{
-    background-color: red;
-    width: 25px;
-    height: 25px;
-}
-.green{
-    background-color: green;
-    width: 25px;
-    height: 25px;
-}
-.blue{
-    background-color: blue;
-    width: 25px;
-    height: 25px;
 }
 .avatar {
     position: relative;
@@ -213,4 +215,16 @@ body{
     width: 24px;
     height: 24px;
     background: url('../img/how.gif');
+}
+#Settings{
+    width: 32px;
+    height: 32px;
+    background: url('../img/settings.gif');
+}
+#header {
+    width: 90vw;
+    background-color: snow;
+    border: solid 1px gray;
+    border-radius: 25px;
+    grid-area: header;
 }

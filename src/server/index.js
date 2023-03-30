@@ -117,6 +117,7 @@ io.on("connection", (socket) => {
 
     const EndGame = async (room) => {
         console.log('End of the game!');
+        await CalculatePoints(room);
         await SetToDefault(room);
         io.to(room._id.valueOf()).emit('end-of-game',room);
     }

@@ -54,7 +54,7 @@ function sendMessage(event,obj){
 }
 
 function gameon(){
-    document.querySelector("#game").style.display = 'flex';
+    document.querySelector("#game").style.display = 'grid';
     document.querySelector("#lobby").style.display = 'none';
     Joined = true;
 }
@@ -163,6 +163,7 @@ socket.on('change-turn',function(room){
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
     current_room = room;
     renderPlayers(room);
+    ClearCanvas();
     if(MyTimer)
     clearInterval(MyTimer);
     Timer = room.DrawTime;
@@ -178,6 +179,7 @@ socket.on('change-round',function(room){
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
     current_room = room;
     renderPlayers(room);
+    ClearCanvas();
     if(MyTimer)
     clearInterval(MyTimer);
     Timer = room.DrawTime;

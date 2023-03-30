@@ -41,6 +41,13 @@ const setColor = function (index) {
     STATES.COLOR = index;
 }
 
+const ClearCanvas = function(){
+    ctx.beginPath();
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.closePath();
+}
+
 const CreateAvatarText = function(body,eye,mouth){
     return `
     <div class='avatar'>
@@ -83,7 +90,7 @@ const renderPlayers = function(room){
     let points_arr = [...new Set(arr)];
     player_container.innerHTML = room.players.map(function(player){
         //if(player.socketid == socketid)
-            return `<div class='SpaceBetween'>
+            return `<div class='SpaceBetween ${player.guessedIt ? 'guessedIt' : null}'>
             <span>#${points_arr.indexOf(player.points) + 1}</span>
             <div class='player-data'>
                 ${player.socketid == socketid ? `<p class='You'>${player.username} (You)</p>` : `<p>${player.username}</p>`}
