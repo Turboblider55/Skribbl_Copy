@@ -1,13 +1,15 @@
 const canvas = document.querySelector("canvas");
+let canvas_rect = canvas.getBoundingClientRect();
 const holder = document.querySelector("#Main-Area");
 const tools = document.querySelector("#Tools");
-const chat = document.querySelector("#Chat")
+const chat = document.querySelector("#Chat-body")
 const message_input = document.querySelector("#message_input");
 const player_container = document.querySelector("#player_container");
 const time_container = document.querySelector('#time_container');
 const lobby_avatar = document.querySelector('#lobby_avatar');
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
+let window_width = window.innerWidth;
 
 const SetCurrentTool = function(tool){
     TOOL = tool;
@@ -23,8 +25,6 @@ let Paint_Data = [];
 //     event.preventDefault();
 // });
 
-
-canvas.width = window.innerWidth * 0.25;
 //console.log(canvas.offsetLeft);
 
 let STATES = {
@@ -46,6 +46,7 @@ const ClearCanvas = function(){
     ctx.fillStyle = 'white';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.closePath();
+
 }
 
 const CreateAvatarText = function(body,eye,mouth){
@@ -90,9 +91,9 @@ const renderPlayers = function(room){
     let points_arr = [...new Set(arr)];
     player_container.innerHTML = room.players.map(function(player){
         //if(player.socketid == socketid)
-            return `<div class='SpaceBetween ${player.guessedIt ? 'guessedIt' : null}'>
+            return `<div class='SpaceBetween ${player.guessedIt ? 'guessedIt' : ""}'>
             <span>#${points_arr.indexOf(player.points) + 1}</span>
-            <div class='player-data'>
+            <div class='player-data container-column'>
                 ${player.socketid == socketid ? `<p class='You'>${player.username} (You)</p>` : `<p>${player.username}</p>`}
                 <p>${player.points}</p>
             </div>
@@ -153,8 +154,11 @@ canvas.addEventListener('mousemove',function(event){
     // }
 });
 
-socket.on('paint_to_user',function(color,pos1,pos2,width){
-    Draw(ctx,color,pos1,pos2,width);
+socket.on('paint_to_user',function(tool,data){
+    if(tool == 'pen')
+        Draw(ctx,data.color,data.pos1,data.pos2,data.width);
+    else if(tool == 'trash')
+        ClearCanvas();
 });
 
 socket.on('new-message-to-user',function(username,text,type){
@@ -176,13 +180,19 @@ socket.on('paint_data_to_user',function(data){
 const loop = () => {
     if(isDrawing){
         //console.log(MyTimer == null, GameIsOn, playerCount > 1);
+        if(window_width != window.innerWidth){
+            canvas_rect = canvas.getBoundingClientRect();
+            window_width = window.innerWidth;
+        }
+
         if(MyTimer == null && GameIsOn && playerCount > 1){
             console.log('This is true');
             MyTimer = setInterval(ChangeTimer,1000);
         }
         if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
             if(TOOL == 'pen'){
-                const offset = new vec2(canvas.offsetLeft,canvas.offsetTop);
+                const offset = new vec2(canvas_rect.x + 10.0,canvas_rect.y);
+                //console.log(offset);
                 const new_prev = Vec2.Sub(offset,STATES.PREV);
                 const new_curr = Vec2.Sub(offset,STATES.CURR);
                 Draw(ctx,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
@@ -190,11 +200,17 @@ const loop = () => {
                 if(connected){
                     console.log("this code runs!");
                     Paint_Data.push({color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
-                    socket.emit('paint_to_server',roomid,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
+                    socket.emit('paint_to_server',TOOL,{room : roomid , color : COLORS[STATES.COLOR] , pos1 : new_prev , pos2 : new_curr , width : canvas.width});
                 }
             }
             else
                 Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);
+        }
+        if(TOOL == 'trash'){
+            socket.emit('paint_to_server',TOOL,{room : roomid});
+            ClearCanvas();
+            //ClearCanvas();
+            TOOL = 'pen';
         }
     }
     requestAnimationFrame(loop)

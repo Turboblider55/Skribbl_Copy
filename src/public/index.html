@@ -16,10 +16,7 @@
                     <input type="text" name="username" id="username" class="form-control mb-2 mt-2" placeholder="Username" >
                     <select name="language" id="language" class="form-control mb-2 mt-2">
                         <option value="english">English</option>
-                        <option value="german">German</option>
-                        <option value="russian">Russian</option>
-                        <option value="french">French</option>
-                        <option value="Spanish">Spanish</option>
+                        <option value="hungarian">Hungarian</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -61,19 +58,23 @@
                 <div id="player_container"></div>
             </div>
             <div class=" FlexAlignments" id="Main-Area">
-                <canvas></canvas>
-                <div id="Tools" class="FlexAlignments">
-                    <div id="Bucket" onclick="SetCurrentTool('bucket')">Bucket</div>
-                    <div id="Pen" onclick="SetCurrentTool('pen')">Pen</div>
-                </div>
+                <div id="room-maker">hey</div>
+                <canvas width="400px" height="300px"></canvas>
             </div>
             <div class="Side_Panel" id="right-panel">
-                <div id="Chat"></div>
+                <div id="Chat">
+                    <div id="Chat-body"></div>
+                </div>
                 <form>
                     <div class="form-group">
                             <input type="text" name="message_input" id="message_input" placeholder="Type your guess here..." class="form-control" onkeydown="sendMessage(event,this)">
                     </div>
                 </form>
+            </div>
+            <div id="Tools" class="FlexAlignments">
+                <div id="Bucket" onclick="SetCurrentTool('bucket')">Bucket</div>
+                <div id="Pen" onclick="SetCurrentTool('pen')">Pen</div>
+                <div id="Trash" onclick="SetCurrentTool('trash')">Trash</div>
             </div>
         <!-- </div> -->
     </div>

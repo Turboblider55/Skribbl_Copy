@@ -57,7 +57,7 @@ io.on("connection", (socket) => {
             if(def == 1){
                 const room = new Room({lang : lang, currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0, body_index : body , eye_index : eye , mouth_index : mouth});
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , guessedIndex : 0, body_index : body , eye_index : eye , mouth_index : mouth});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
             else{
                 const room = new Room({lang : lang , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime , currentTime : DrawTime});
                 //const user = new usermodel({username : username , socketid : socketid , isPartyLeader : true , maxPlayerCount : maxPlayerCount , maxRound : maxRound , DrawTime : DrawTime });
-                room.players.push({username : username , socketid : socketid , isPartyLeader : true , isDrawing : true, guessedIndex : 0, body_index : body , eye_index : eye , mouth_index : mouth});
+                room.players.push({username : username , socketid : socketid , isPartyLeader : true , guessedIndex : 0, body_index : body , eye_index : eye , mouth_index : mouth});
                 await room.save().then(()=>console.log("Room created successfully!")).catch((err)=>console.log("Room creation failed! error : " + err));
                 return room;
                 //return cb("new room created");
@@ -222,6 +222,10 @@ io.on("connection", (socket) => {
                     //const user =  new usermodel({username : username,socketid : socketid});
                     //console.log(user);
                     //room.updateOne({$push : {players : {name : name,socketid : socketid}}});
+                    if(room.players.length + 1 == 2)
+                    room.players[0].isDrawing = true;
+                    await room.save();
+                    
                     room.players.push({username : username,socketid : socketid, body_index : body, eye_index : eye, mouth_index : mouth});
                     await room.save();
                     return room;
@@ -266,8 +270,15 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on('paint_to_server',(room,color,pos1,pos2,width)=>{
-        socket.broadcast.to(room).emit('paint_to_user',color,pos1,pos2,width);
+    socket.on('paint_to_server',(tool,data)=>{
+        if(tool == 'pen')
+        socket.broadcast.to(data.room).emit('paint_to_user',tool,{color : data.color , pos1 : data.pos1 , pos2 : data.pos2 , width : data.width});
+        else if(tool == 'bucket'){
+            //Bucket is not working yet
+        }
+        else{
+            socket.broadcast.to(data.room).emit('paint_to_user',tool,{});
+        }
     });
 
     socket.on("new-message-to-server",async (roomid , socketid , username , text , isGuessed, isDrawing, cb)=>{

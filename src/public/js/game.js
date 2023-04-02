@@ -56,6 +56,8 @@ function sendMessage(event,obj){
 function gameon(){
     document.querySelector("#game").style.display = 'grid';
     document.querySelector("#lobby").style.display = 'none';
+    canvas_rect = canvas.getBoundingClientRect();
+    console.log(canvas_rect);
     Joined = true;
 }
 function gameoff(){
