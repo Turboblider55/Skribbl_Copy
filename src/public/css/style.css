@@ -14,6 +14,29 @@ body{
     background-color: gray;
     flex-direction: column;
 }
+#Selected_Color {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    background-color: white;
+}
+#Drawing_Container{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+.color{
+    width: 25px;
+    height: 25px;
+}
+#Colors {
+    width: 325px;
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
 canvas{
     background-color: white;
     position: absolute;
@@ -24,16 +47,31 @@ canvas{
     height: 300px;
     background-color: rgba(120, 120, 120, 0.5);
     text-align: center;
+    animation: roll-down 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) both 1s alternate;
+    /* cubic-bezier(0.55, 0.01, 0.45, 1.38) */
+
+}
+@keyframes roll-down {
+    from {
+        transform: translateY(0px);
+    }
+    to {
+        transform: translateY(-300px);
+    }
 }
 #Tools{
     grid-area: tools;
     width: 100%;
-    height: 50px;
-    border: solid 1px darkgray;
-    border-radius: 10px;
-    margin-top: 10px;
-    padding: 10px;
-    justify-content: space-around;
+}
+#Pen {
+    background: url('../img/how.gif');
+    width: 24px;
+    height: 24px;
+}
+#Trash {
+    background: url('../img/clear.gif');
+    width: 48px;
+    height: 48px;
 }
 #Main-Area{
     position: relative;
@@ -45,12 +83,6 @@ canvas{
     width: 100%;
     height: 100%;
 }
-.Side_Panel{
-    background-color: snow;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 #Chat{
     width: 300px;
     height: 400px;
@@ -59,10 +91,20 @@ canvas{
     overflow: hidden;
     overflow-y: scroll;
 }
+#Chat-body {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    
+}
 .message{
     text-align: left;
     color:black;
     margin: 5px 10px 5px 10px;
+    width: 100%;
+}
+.message .text {
+    width: 100px;
 }
 .You{
     color:cyan;
@@ -187,6 +229,11 @@ body{
     grid-area: left-panel;
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 5px;
+    overflow: hidden;
 }
 #right-panel{
     grid-area: right-panel;
@@ -200,6 +247,10 @@ body{
     position: relative;
     width: 48px;
     height: 48px;
+}
+.Player_Info{
+    background-color: white;
+    width: 100%;
 }
 .body{
     position: absolute;

@@ -110,6 +110,7 @@ function JoinRoom(){
                 //console.log(data.players.find(user=> user.socketid == socketid).isPartyLeader);
                 isLeader = data.players.find(user=> user.socketid == socketid).isPartyLeader;
                 isDrawing = data.players.find(user=> user.socketid == socketid).isDrawing;
+                round_container.innerHTML = `Round ${data.currRound} of ${data.maxRound}`;
                 console.log(isDrawing);
                 //console.log(isLeader);
                 current_room = data;
@@ -163,6 +164,7 @@ socket.on('change-turn',function(room){
     console.log(room);
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
+    SwitchTools();
     current_room = room;
     renderPlayers(room);
     ClearCanvas();
@@ -179,6 +181,8 @@ socket.on('change-round',function(room){
     console.log(room);
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
+    round_container.innerHTML = `Round ${room.currRound} of ${room.maxRound}`;
+    SwitchTools();
     current_room = room;
     renderPlayers(room);
     ClearCanvas();

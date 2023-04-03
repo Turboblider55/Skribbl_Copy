@@ -1,11 +1,14 @@
 const canvas = document.querySelector("canvas");
 let canvas_rect = canvas.getBoundingClientRect();
+const Tools = document.querySelector('#Tools');
 const holder = document.querySelector("#Main-Area");
-const tools = document.querySelector("#Tools");
+const Colors = document.querySelector("#Colors");
+const Selected_Color = document.querySelector('#Selected_Color')
 const chat = document.querySelector("#Chat-body")
 const message_input = document.querySelector("#message_input");
 const player_container = document.querySelector("#player_container");
 const time_container = document.querySelector('#time_container');
+const round_container = document.querySelector('#round_container');
 const lobby_avatar = document.querySelector('#lobby_avatar');
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
@@ -35,10 +38,19 @@ let STATES = {
     PREV : new vec2(0,0)
 }
 
+const SwitchTools = function() {
+    if(isDrawing){
+        Tools.style.display = 'block';
+    }
+    else
+        Tools.style.display = 'none';
+}
+
 const setColor = function (index) {
-    console.log(index);
+    //console.log(index);
     //console.log("Check")
     STATES.COLOR = index;
+    Selected_Color.style.backgroundColor = COLORS[index];
 }
 
 const ClearCanvas = function(){
@@ -91,11 +103,11 @@ const renderPlayers = function(room){
     let points_arr = [...new Set(arr)];
     player_container.innerHTML = room.players.map(function(player){
         //if(player.socketid == socketid)
-            return `<div class='SpaceBetween ${player.guessedIt ? 'guessedIt' : ""}'>
+            return `<div class='SpaceBetween ${player.guessedIt ? 'guessedIt' : ""} Player_Info' >
             <span>#${points_arr.indexOf(player.points) + 1}</span>
             <div class='player-data container-column'>
                 ${player.socketid == socketid ? `<p class='You'>${player.username} (You)</p>` : `<p>${player.username}</p>`}
-                <p>${player.points}</p>
+                <p>${player.points} points</p>
             </div>
             ${player.isDrawing ? "<div class='pen'></div>" : ""}
             ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
@@ -112,7 +124,7 @@ const renderPlayers = function(room){
     }).join("\n");
 }
 
-RenderPaletta(tools,setColor);
+RenderPaletta(Colors,setColor);
 
 // let OFFSETX = holder.offsetLeft + canvas.offsetLeft;
 // let OFFSETY = holder.offsetTop + canvas.offsetTop;

@@ -1,1 +1,1 @@
-const COLORS = ["black","red","green","blue","orange","yellow","white"];
+const COLORS = ['white','lightgray','red','orange','yellow','green','MediumSpringGreen','lightblue','blue','purple','pink','burlywood','Sienna','black','gray','darkred','darkorange','gold','darkgreen','MediumAquaMarine','DarkCyan','DarkBlue','Indigo','MediumOrchid','DarkSalmon','SaddleBrown '];

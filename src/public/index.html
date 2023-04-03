@@ -45,7 +45,10 @@
     <!-- The game panel -->
     <div class="container container-column Main-Container FlexAlignments" id="game" style="display: none;">
         <div class="SpaceBetween" id="header">
-            <div id="time_container">0</div>
+            <div class="SpaceBetween">
+                <div id="time_container">0</div>
+                <div id="round_container">Round 1 of 3</div>
+            </div>
             <div class="container-column">
                 <p>Guess this</p>
                 <p id="WordToGuess">_ _ _</p>
@@ -53,15 +56,16 @@
             <div id="Settings"></div>
         </div>
         <!-- <div class="row text-center"> -->
-            <div class="Side_Panel" id="left-panel">
-                
+            <div id="left-panel">
                 <div id="player_container"></div>
             </div>
             <div class=" FlexAlignments" id="Main-Area">
-                <div id="room-maker">hey</div>
+                <div id="room-maker">
+                    <p>Waiting for other players...</p>
+                </div>
                 <canvas width="400px" height="300px"></canvas>
             </div>
-            <div class="Side_Panel" id="right-panel">
+            <div id="right-panel">
                 <div id="Chat">
                     <div id="Chat-body"></div>
                 </div>
@@ -71,10 +75,17 @@
                     </div>
                 </form>
             </div>
-            <div id="Tools" class="FlexAlignments">
-                <div id="Bucket" onclick="SetCurrentTool('bucket')">Bucket</div>
-                <div id="Pen" onclick="SetCurrentTool('pen')">Pen</div>
-                <div id="Trash" onclick="SetCurrentTool('trash')">Trash</div>
+            <div id="Tools" class="FlexAlignments SpaceBetween">
+                <div id="Drawing_Container">
+                    <div id="Selected_Color"></div>
+                    <div id="Colors"></div>
+                    <div id="Stroke-Width"></div>
+                </div>
+                <div class="SpaceBetween">
+                    <!-- <div id="Bucket" onclick="SetCurrentTool('bucket')">Bucket</div> -->
+                    <div id="Pen" onclick="SetCurrentTool('pen')"></div>
+                    <div id="Trash" onclick="SetCurrentTool('trash')"></div>
+                </div>
             </div>
         <!-- </div> -->
     </div>
