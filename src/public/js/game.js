@@ -110,7 +110,12 @@ function JoinRoom(){
                 //console.log(data.players.find(user=> user.socketid == socketid).isPartyLeader);
                 isLeader = data.players.find(user=> user.socketid == socketid).isPartyLeader;
                 isDrawing = data.players.find(user=> user.socketid == socketid).isDrawing;
+                playerCount = data.players.length;
+                GameIsOn = playerCount > 1 ? true : false;
+
                 round_container.innerHTML = `Round ${data.currRound} of ${data.maxRound}`;
+                time_container.innerHTML = data.DrawTime;
+                SwitchTools();
                 console.log(isDrawing);
                 //console.log(isLeader);
                 current_room = data;
@@ -155,12 +160,14 @@ socket.on("updateRoom",function(room){
     //console.log(isLeader);
     current_room = room;
     renderPlayers(room);
+    SwitchTools();
     playerCount = room.players.length;
     GameIsOn = playerCount > 1 ? true : false;
 })
 
-socket.on('change-turn',function(room){
+socket.on('turn-over',function(room,point_gains,rightWord){
     console.log('Turn Changed!');
+    ShowRollDown(1,point_gains,rightWord,false);
     console.log(room);
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
@@ -168,16 +175,19 @@ socket.on('change-turn',function(room){
     current_room = room;
     renderPlayers(room);
     ClearCanvas();
+
     if(MyTimer)
-    clearInterval(MyTimer);
+        clearInterval(MyTimer);
+
     Timer = room.DrawTime;
     isGuessed = false;
     playerCount = room.players.length;
     GameIsOn = playerCount > 1 ? true : false;
 });
 
-socket.on('change-round',function(room){
+socket.on('round-over',function(room,point_gains,rightWord){
     console.log('Round changed!');
+    ShowRollDown(1,point_gains,rightWord,true);
     console.log(room);
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;

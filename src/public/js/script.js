@@ -10,6 +10,7 @@ const player_container = document.querySelector("#player_container");
 const time_container = document.querySelector('#time_container');
 const round_container = document.querySelector('#round_container');
 const lobby_avatar = document.querySelector('#lobby_avatar');
+const room_maker = document.querySelector('#room_maker');
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
 let window_width = window.innerWidth;
@@ -58,7 +59,22 @@ const ClearCanvas = function(){
     ctx.fillStyle = 'white';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.closePath();
+}
 
+const ShowRollDown = (type,data,rightword,showRoundChange) => {
+    room_maker.innerHTML = `
+    <p id='rightword'>The right word was <span>${rightword}</span></p>
+    <p>Time is up!</p>
+    <table>
+        ${data.map(info=>`
+        <tr>
+            <td>${info.name}</td>
+            <td class='${info.point_gain > 0 ? 'Gained' : 'NotGained'}'>${info.point_gain > 0 ? '+' : ''}${info.point_gain}</td>
+        </tr>
+        `).join('')}
+    </table>
+    `;
+    // room_maker.style.animation = 'roll-down 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) both 0s alternate backwards';
 }
 
 const CreateAvatarText = function(body,eye,mouth){
@@ -174,7 +190,7 @@ socket.on('paint_to_user',function(tool,data){
 });
 
 socket.on('new-message-to-user',function(username,text,type){
-    chat.insertAdjacentHTML('beforeend',`<div class='message ${type.substring(0,type.length)}'> <span class='user'>${username}:</span> <span class='text'>${text}</span></div>`);
+    chat.insertAdjacentHTML('beforeend',`<div class='message ${type.substring(0,type.length)}'> ${username ? `<span class='user'>${username}:</span>` : ''} <span class='text'>${text}</span></div>`);
 });
 
 socket.on('paint_data_request',function(id){

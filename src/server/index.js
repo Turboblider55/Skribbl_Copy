@@ -78,24 +78,31 @@ io.on("connection", (socket) => {
 
     const CalculatePoints = async (room) => {
         //If noone guessed, than for now we don't do anything
-        if(room.guessedCounter == 0)
-            return;
+        let points_data = [];
+        if(room.guessedCounter == 0){
+            for(let i = 0; i < room.players.length;i++){
+                points_data.push({name : room.players[i].username , point_gain : 0});
+            }
+            return points_data;
+        }
         
         const maxPoint = (room.guessedCounter + 1) * 80;
         for(let player of room.players){
             if(player.guessedIndex == 0){
                 player.points += maxPoint - 80;
+                points_data.push({name : player.username , point_gain : (maxPoint - 80)});
                 continue;
             }
             if(player.guessedIndex != -1){
                 console.log(player.guessedIndex);
                 player.points += maxPoint - (player.guessedIndex - 1) * 80 ;
+                points_data.push({name : player.username , point_gain : (maxPoint - (player.guessedIndex - 1) * 80 )});
                 continue;
             }
         }
         await room.save();
         //console.log(room);
-        return;
+        return points_data;
     }
 
     const SetToDefault = async (room) => {
@@ -120,12 +127,13 @@ io.on("connection", (socket) => {
         await CalculatePoints(room);
         await SetToDefault(room);
         io.to(room._id.valueOf()).emit('end-of-game',room);
+        io.to(room._id.valueOf()).emit('new-message-to-user','',`The game is over!`,'Drawing');
     }
 
     const ChangeRound = async (room) => {
         try{
             if(room.currRound < room.maxRound){
-                await CalculatePoints(room);
+                const point_gains = await CalculatePoints(room);
                 await SetToDefault(room);
                 room.turnIndex = 0;
                 room.players[0].isDrawing = true;
@@ -134,7 +142,8 @@ io.on("connection", (socket) => {
                 room.currRound++;
                 await room.save();
                 //room = await Room.find({_id : room._id});
-                io.to(room._id.valueOf()).emit('change-round',room);
+                io.to(room._id.valueOf()).emit('round-over',room,point_gains,'Helo');
+                io.to(room._id.valueOf()).emit('new-message-to-user','',`<span>${room.players[room.turnIndex].username}</span> is drawing!`,'Drawing');
                 return;
             }
             //if(room.currRound == room.maxRound)
@@ -178,7 +187,7 @@ io.on("connection", (socket) => {
         try{
             //console.log(room.turnIndex + 1 < room.players.length);
             if(room.turnIndex + 1 < room.players.length){
-                await CalculatePoints(room);
+                const point_gains = await CalculatePoints(room);
                 await SetToDefault(room);
                 room.turnIndex++;
                 //console.log(room.turnIndex);
@@ -189,7 +198,8 @@ io.on("connection", (socket) => {
                 //room = await Room.find({_id : room._id});
                 //console.log(room);
                 //You have to user the valueof function to get only the id
-                io.to(room._id.valueOf()).emit('change-turn',room);
+                io.to(room._id.valueOf()).emit('turn-over',room,point_gains);
+                io.to(room._id.valueOf()).emit('new-message-to-user','',`<span>${room.players[room.turnIndex].username}</span> is drawing!`,'Drawing');
                 return;
             }
             //If the turnindex + 1 is not less than players.length, than it must be equal, 
@@ -295,15 +305,16 @@ io.on("connection", (socket) => {
 
                 if(!isGuessed){
                     if(text.toLowerCase() == WordToGuess.toLowerCase()){
-                        socket.broadcast.to(roomid).emit('new-message-to-user','Server',`${username} guessed the word!`,'Guessed');
+                        socket.broadcast.to(roomid).emit('new-message-to-user','',`${username} guessed the word!`,'Guessed');
                         //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
-                        socket.emit('new-message-to-user','Server','You guessed it!','Guessed');
+                        socket.emit('new-message-to-user','','You guessed it!','Guessed');
                         //You have to use update on the schema itself, not on the element of the room schema
                         const result = await Room.updateOne({'players.socketid' : socketid},{$set:{'players.$.guessedIt' : true}});
                         //console.log(result);
                         room = await Room.findOne({_id : roomid});
                         await IncreaseGuessedUsers(room,socketid);
                         if(TurnIsOver(room)){
+                            io.to(roomid).emit('new-message-to-user','',`The word was <spam>'${WordToGuess}'</span>`,'Right');
                             await ChangeTurn(room);
                             console.log("Turn is Over!");
                             return;
@@ -321,7 +332,7 @@ io.on("connection", (socket) => {
                     if(diff < 2){
                         socket.broadcast.to(roomid).emit('new-message-to-user',username, text,'Normal');
                         //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
-                        socket.emit('new-message-to-user','Server',`The word <span>${text}</span> is close!`,'Close');
+                        socket.emit('new-message-to-user','',`The word <span>${text}</span> is close!`,'Close');
                         return cb(null,false);
                     }
                     else{
@@ -350,7 +361,7 @@ io.on("connection", (socket) => {
                     //io.to(room._id).emit('updateRoom',room);
                     socket.broadcast.to(id).emit('updateRoom',room);
                     console.log(id);
-                    socket.broadcast.to(id).emit("new-message-to-user",'Server',`${params.name} joined the room!`,'Join');
+                    socket.broadcast.to(id).emit("new-message-to-user",'',`${params.name} joined the room!`,'Join');
                     const user = room.players.find(player=>player.isDrawing == true);
                     //console.log(user);
                     if(user)
@@ -397,18 +408,18 @@ io.on("connection", (socket) => {
                     room = await Room.findOne({_id : params.roomid});
                     //Sending to every user in the room the new roomdata
                     socket.broadcast.to(params.roomid).emit('updateRoom',room);
-                    socket.broadcast.to(params.roomid).emit('new-message-to-user','Server',`${params.username} left the room!`,'Leave');
+                    socket.broadcast.to(params.roomid).emit('new-message-to-user','',`${params.username} left the room!`,'Leave');
                     
                     if(params.isDrawing){
                         //console.log(room.turnIndex + 1 < room.players.length);
                         if(room.turnIndex + 1 < room.players.length){
-                            await CalculatePoints(room);
+                            const point_gains = await CalculatePoints(room);
                             await SetToDefault(room);
                             room.players[room.turnIndex].isDrawing = true;
                             room.players[room.turnIndex].guessedIt = false;
                             await room.save();
                             //You have to user the valueof function to get only the id
-                            io.to(room._id.valueOf()).emit('change-turn',room);
+                            io.to(room._id.valueOf()).emit('turn-over',room,point_gains,'Helo');
                             return;
                         }
                         //If the turnindex + 1 is not less than players.length, than it must be equal, 
