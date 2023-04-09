@@ -11,6 +11,7 @@ const time_container = document.querySelector('#time_container');
 const round_container = document.querySelector('#round_container');
 const lobby_avatar = document.querySelector('#lobby_avatar');
 const room_maker = document.querySelector('#room_maker');
+const word_information = document.querySelector('#word_information');
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
 let window_width = window.innerWidth;
@@ -41,10 +42,12 @@ let STATES = {
 
 const SwitchTools = function() {
     if(isDrawing){
-        Tools.style.display = 'block';
+        Tools.style.display = 'flex';
     }
     else
         Tools.style.display = 'none';
+    //Changing the tools element will change the position of the canvas, so we need to get the position of the canvas again
+    canvas_rect = canvas.getBoundingClientRect();
 }
 
 const setColor = function (index) {
@@ -54,6 +57,12 @@ const setColor = function (index) {
     Selected_Color.style.backgroundColor = COLORS[index];
 }
 
+const RenderPaletta = (obj) => {
+    for(let color in COLORS){
+        obj.innerHTML += `<div onclick='setColor(${color})' style='background-color:${COLORS[color]};' class='color'></div>`
+    }
+}
+
 const ClearCanvas = function(){
     ctx.beginPath();
     ctx.fillStyle = 'white';
@@ -61,12 +70,27 @@ const ClearCanvas = function(){
     ctx.closePath();
 }
 
-const ShowRollDown = (type,data,rightword,showRoundChange) => {
+const StartRound = function(roomid,word){
+    console.log(roomid,word);
+    socket.emit('start-round-to-server',roomid,word);
+}
+
+const RollUp = () => {
+    room_maker.classList.remove('roll-down');
+    room_maker.classList.add('roll-up');
+}
+
+const RollDown = () => {
+    room_maker.classList.remove('roll-up');
+    room_maker.classList.add('roll-down');
+}
+
+const ShowPointGains = (rightword,point_gains) => {
     room_maker.innerHTML = `
     <p id='rightword'>The right word was <span>${rightword}</span></p>
     <p>Time is up!</p>
     <table>
-        ${data.map(info=>`
+        ${point_gains.map(info=>`
         <tr>
             <td>${info.name}</td>
             <td class='${info.point_gain > 0 ? 'Gained' : 'NotGained'}'>${info.point_gain > 0 ? '+' : ''}${info.point_gain}</td>
@@ -74,7 +98,142 @@ const ShowRollDown = (type,data,rightword,showRoundChange) => {
         `).join('')}
     </table>
     `;
-    // room_maker.style.animation = 'roll-down 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) both 0s alternate backwards';
+}
+
+const ShowCurrentRound = (current_round,max_round) => {
+    room_maker.innerHTML = `
+    <div>Round ${current_round} of ${max_round}</div>
+    `;
+}
+
+const ShowWordChoosing = (wordstochoosefrom) => {
+    const drawing_player = current_room.players.find(player=>current_room.players[current_room.turnIndex] == player);
+        console.log(drawing_player);
+        if(drawing_player.socketid == socketid){
+            room_maker.innerHTML = `
+            <p>Choose a word!</p>
+            <div class='SpaceBetween'>
+            ${wordstochoosefrom.map(function(word){
+                return `<div class='word-option' onclick="StartRound('${roomid}','${word}')">${word}</div>`
+            }).join('')}
+            </div>
+            `
+            // <div class='word-option' onclick="StartRound(${roomid},'Choosen word')">Click this!</div>
+            //Waiting for the panel to come down, then start to count back
+            setTimeout(() => {
+                Timer = 15;
+                MyTimer = setInterval(ChangeTimer,1000);
+            }, 2000);
+        }
+        else{
+            room_maker.innerHTML = `
+            <p>${drawing_player.username} is choosing a word!</p>
+            ${CreateAvatarText(drawing_player.body_index,drawing_player.eye_index,drawing_player.mouth)}
+            `
+        }
+}
+
+const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
+    if(type == 'game-start'){
+        if(room_maker.classList.contains('roll-down')){
+            RollUp();
+            setTimeout(() => {
+                // room_maker.innerHTML = `<p>Helo guys!</p>`;
+                ShowWordChoosing(wordstochoosefrom);
+                RollDown();
+            }, 1000);
+        }
+        else{
+            // room_maker.innerHTML = `<p>Helo guys!</p>`;
+            ShowWordChoosing(wordstochoosefrom);
+            RollDown();
+        }
+        return;
+    }
+    // room_maker.innerHTML = `
+    // <p id='rightword'>The right word was <span>${rightword}</span></p>
+    // <p>Time is up!</p>
+    // <table>
+    //     ${data.map(info=>`
+    //     <tr>
+    //         <td>${info.name}</td>
+    //         <td class='${info.point_gain > 0 ? 'Gained' : 'NotGained'}'>${info.point_gain > 0 ? '+' : ''}${info.point_gain}</td>
+    //     </tr>
+    //     `).join('')}
+    // </table>
+    // `;
+
+    // const drawing_player = current_room.players.find(player=>current_room.players[current_room.turnIndex] == player);
+    // console.log(drawing_player);
+    // if(drawing_player.socketid == socketid){
+    //     room_maker.innerHTML = `
+    //     <p>Choose a word!</p>
+    //     <div class='SpaceBetween'>
+    //     ${wordstochoosefrom.map(function(word){
+    //         return `<div class='word-option' onclick="StartRound('${roomid}','${word}')">${word}</div>`
+    //     }).join('')}
+    //     </div>
+    //     `
+    //     // <div class='word-option' onclick="StartRound(${roomid},'Choosen word')">Click this!</div>
+    //     //Waiting for the panel to come down, then start to count back
+    //     setTimeout(() => {
+    //         Timer = 15;
+    //         MyTimer = setInterval(ChangeTimer,1000);
+    //     }, 2000);
+    // }
+    // else{
+    //     room_maker.innerHTML = `
+    //     <p>${drawing_player.username} is choosing a word!</p>
+    //     ${CreateAvatarText(drawing_player.body_index,drawing_player.eye_index,drawing_player.mouth)}
+    //     `
+    // }
+    
+    if(type == 'turn-over'){
+        data.sort(function(p1,p2){return p1.point_gain - p2.point_gain});
+        ShowPointGains(rightword,data);
+        RollDown();
+        setTimeout(() => {
+            RollUp();
+            setTimeout(() => {
+                ShowWordChoosing(wordstochoosefrom);
+                RollDown();
+            },1000);
+        }, 2500);
+    }
+    else if(type == 'round-over'){
+        data.sort(function(p1,p2){return p1.point_gain - p2.point_gain});
+        ShowPointGains(rightword,data);
+        RollDown();
+        setTimeout(() => {
+            setTimeout(() => {
+                RollUp();
+                setTimeout(() => {
+                    ShowCurrentRound(current_room.currRound,current_room.maxRound);
+                    RollDown();
+                    setTimeout(() => {
+                        RollUp();
+                        setTimeout(() => {
+                            ShowWordChoosing(wordstochoosefrom);
+                            RollDown();
+                        }, 1000);
+                    }, 2000);
+                }, 1000);
+            }, 1000);
+        }, 2500);
+    }
+    else if(type == 'game-over'){
+        data.sort(function(p1,p2){return p1.point_gain - p2.point_gain});
+        ShowPointGains(rightword,data);
+        RollDown();
+        setTimeout(() => {
+            RollUp();
+            setTimeout(() => {
+                room_maker.innerHTML = `<div>Game Over</div>`;
+                RollDown();
+            }, 1000);
+        }, 2500);
+    }
+
 }
 
 const CreateAvatarText = function(body,eye,mouth){
@@ -189,6 +348,8 @@ socket.on('paint_to_user',function(tool,data){
         ClearCanvas();
 });
 
+
+
 socket.on('new-message-to-user',function(username,text,type){
     chat.insertAdjacentHTML('beforeend',`<div class='message ${type.substring(0,type.length)}'> ${username ? `<span class='user'>${username}:</span>` : ''} <span class='text'>${text}</span></div>`);
 });
@@ -209,6 +370,7 @@ const loop = () => {
     if(isDrawing){
         //console.log(MyTimer == null, GameIsOn, playerCount > 1);
         if(window_width != window.innerWidth){
+            console.log("Window size changed!");
             canvas_rect = canvas.getBoundingClientRect();
             window_width = window.innerWidth;
         }
@@ -219,7 +381,7 @@ const loop = () => {
         }
         if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
             if(TOOL == 'pen'){
-                const offset = new vec2(canvas_rect.x + 10.0,canvas_rect.y);
+                const offset = new vec2(canvas_rect.x,canvas_rect.y);
                 //console.log(offset);
                 const new_prev = Vec2.Sub(offset,STATES.PREV);
                 const new_curr = Vec2.Sub(offset,STATES.CURR);

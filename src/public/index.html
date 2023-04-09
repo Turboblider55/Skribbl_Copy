@@ -49,7 +49,7 @@
                 <div id="time_container">0</div>
                 <div id="round_container">Round 1 of 3</div>
             </div>
-            <div class="container-column">
+            <div class="container-column" id="word_information">
                 <p>Guess this</p>
                 <p id="WordToGuess">_ _ _</p>
             </div>
@@ -60,16 +60,24 @@
                 <div id="player_container"></div>
             </div>
             <div class=" FlexAlignments" id="Main-Area">
-                <canvas width="400px" height="300px"></canvas>
+                <canvas width="600px" height="400px"></canvas>
                 <div id="room_maker">
-                    <p>Waiting for other players...</p>
+                    <div class="waiting">Waiting for other players...</div>
+                    <div class="round-result display-none">
+                        <p id='rightword'>The right word was <span>'Word'</span></p>
+                            <p>Time is up!</p>
+                        <table></table>
+                    </div>
+                    <div class="display-none">
+
+                    </div>
                 </div>
             </div>
             <div id="right-panel">
                 <div id="Chat">
                     <div id="Chat-body"></div>
                 </div>
-                <form>
+                <form id="chat-form">
                     <div class="form-group">
                             <input type="text" name="message_input" id="message_input" placeholder="Type your guess here..." class="form-control" onkeydown="sendMessage(event,this)">
                     </div>
@@ -91,11 +99,10 @@
     </div>
     <script src="./js/socket.io.js"></script>
     <script src="./js/generateName.js"></script>
-    <script src="./js/game.js"></script>
     <script src="./js/Vectors.js"></script>
     <script src="../js/Colors.js"></script>
-    <script src="./js/RenderPaletta.js"></script>
-    <script src="./js/draw.js"></script>
+    <script src="./js/game.js"></script>
     <script src="./js/script.js"></script>
+    <script src="./js/draw.js"></script>
 </body>
 </html>

@@ -14,6 +14,7 @@ let GameIsOn = false;
 let Timer = -1;
 let MyTimer = null;
 let playerCount = 0;
+let game_state = '';
 
 //by default, there are 26 body, 57 eye, and 51 mouth,
 //but we need to subtract 1, since we need the indexes
@@ -81,6 +82,7 @@ function EndOfGame(){
         GameIsOn = false;
         isGuessed = false;
         isDrawing = false;
+        SwitchTools();
         //Not needed for now,
         // ctx.beginPath();
         // ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -106,12 +108,27 @@ function JoinRoom(){
             if(err){
                 console.log(err);
             }
-                roomid = data._id.valueOf();
+                roomid = data._id;
                 //console.log(data.players.find(user=> user.socketid == socketid).isPartyLeader);
                 isLeader = data.players.find(user=> user.socketid == socketid).isPartyLeader;
                 isDrawing = data.players.find(user=> user.socketid == socketid).isDrawing;
                 playerCount = data.players.length;
                 GameIsOn = playerCount > 1 ? true : false;
+
+                if(!GameIsOn){
+                    RollDown();
+                }
+                //If we have the game going, than we don't have to set the roll up animation
+                //Also, if we join the game, we cannot be the drawer for sure, so we don't have to check
+                // if(data.gameState == 0 && GameIsOn){
+                //     const drawing_player = data.players.find(player=>player.isDrawing == true);
+                //     if(drawing_player){
+                //         room_maker.innerHTML = `
+                //         <p>${drawing_player.username} is choosing a word!</p>
+                //         ${CreateAvatarText(drawing_player.body_index,drawing_player.eye_index,drawing_player.mouth)}
+                //         `
+                //     }
+                // }
 
                 round_container.innerHTML = `Round ${data.currRound} of ${data.maxRound}`;
                 time_container.innerHTML = data.DrawTime;
@@ -163,16 +180,51 @@ socket.on("updateRoom",function(room){
     SwitchTools();
     playerCount = room.players.length;
     GameIsOn = playerCount > 1 ? true : false;
+
+    if(!GameIsOn){
+        room_maker.classList.remove('roll-up');
+        room_maker.classList.add('roll-down');
+    }
+    // else{
+    //     room_maker.classList.remove('roll-down');
+    //     room_maker.classList.add('roll-up');
+    // }
 })
 
-socket.on('turn-over',function(room,point_gains,rightWord){
-    console.log('Turn Changed!');
-    ShowRollDown(1,point_gains,rightWord,false);
+socket.on("start-round-to-user",function(room){
+    console.log('Turn started!')
+    current_room = room;
     console.log(room);
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
     SwitchTools();
+    renderPlayers(room);
+    ClearCanvas();
+    
+    Timer = room.DrawTime;
+    isGuessed = false;
+    playerCount = room.players.length;
+    GameIsOn = playerCount > 1 ? true : false;
+
+    if(isDrawing){
+        word_information.innerHTML = `<p>Draw This</p><p>${current_room.word}</p>`
+    }
+    else
+        word_information.innerHTML = `<p>Guess This</p><p>${current_room.word.split("").map(function(){return '_ '}).join("")}</p>`
+
+    room_maker.classList.remove('roll-down');
+    room_maker.classList.add('roll-up');
+});
+
+socket.on('turn-over',function(room,type,datas){
+    console.log('Turn Changed!');
     current_room = room;
+    ShowRollDown(type,datas.point_gains,datas.rightWord,datas.wordstochoosefrom);
+    console.log(room);
+    isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
+    isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
+    SwitchTools();
+    
     renderPlayers(room);
     ClearCanvas();
 
@@ -185,15 +237,15 @@ socket.on('turn-over',function(room,point_gains,rightWord){
     GameIsOn = playerCount > 1 ? true : false;
 });
 
-socket.on('round-over',function(room,point_gains,rightWord){
+socket.on('round-over',function(room,type,datas){
     console.log('Round changed!');
-    ShowRollDown(1,point_gains,rightWord,true);
+    current_room = room;
+    ShowRollDown(type,datas.point_gains,datas.rightWord,datas.wordstochoosefrom);
     console.log(room);
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
     isDrawing = room.players.find(user=> user.socketid == socketid).isDrawing;
     round_container.innerHTML = `Round ${room.currRound} of ${room.maxRound}`;
     SwitchTools();
-    current_room = room;
     renderPlayers(room);
     ClearCanvas();
     if(MyTimer)

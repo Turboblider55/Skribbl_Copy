@@ -41,26 +41,55 @@ canvas{
     background-color: white;
     position: absolute;
 }
+.display-none {
+    display: none;
+}
 #room_maker{
     position: absolute;
-    width: 400px;
-    height: 300px;
+    width: 600px;
+    height: 400px;
     background-color: rgba(120, 120, 120, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    animation: roll-down 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) 1s alternate both ;
+    transform: translateY(-300px);
+    /* animation: roll-down 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) 1s 1 normal forwards; */
     /* animation: name duration timing-function delay iteration-count direction fill-mode; */
     /* cubic-bezier(0.55, 0.01, 0.45, 1.38) */
-
 }
-@keyframes roll-down {
-    from {
+.roll-down {
+    animation-name: roll-animation;
+    animation-duration: 1s;
+    animation-timing-function: cubic-bezier(0.54,-0.37, 0.45, 1.38);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-direction: reverse;
+    animation-fill-mode: forwards;
+    /* animation: roll-animation 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) 1s 1 reverse forwards; */
+}
+.roll-up {
+    animation-name: roll-animation;
+    animation-duration: 1s;
+    animation-timing-function: cubic-bezier(0.54,-0.37, 0.45, 1.38);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-fill-mode: forwards;
+    /* animation: roll-animation 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) 1s 1 normal forwards; */
+}
+.Gained {
+    color: lightgreen;
+}
+.NotGained {
+    color: red;
+}
+@keyframes roll-animation {
+    0% {
         transform: translateY(0px);
     }
-    to {
-        transform: translateY(-300px);
+    100% {
+        transform: translateY(-400px);
     }
 }
 #Tools{
@@ -69,8 +98,8 @@ canvas{
 }
 #Pen {
     background: url('../img/pen.gif');
-    width: 24px;
-    height: 24px;
+    width: 48px;
+    height: 48px;
 }
 #Trash {
     background: url('../img/clear.gif');
@@ -86,14 +115,26 @@ canvas{
     grid-area: main;
     width: 600px;
     height: 400px;
+    overflow: hidden;
 }
 #Chat{
+    margin: 0px;
     width: 300px;
     height: 400px;
     background-color: gray;
     /* The order matters, first hidden, then scroll and not reverse */
     overflow: hidden;
     overflow-y: scroll;
+    
+}
+#chat-form {
+    width: 300px;
+    height: 50px;
+    margin: 0px;
+}
+#chat-form input[type = 'text'] {
+    border: gray solid 2px;
+    border-radius: 5px;
 }
 #Chat-body {
     display: flex;
@@ -115,9 +156,6 @@ canvas{
     font-weight: bold;
 }
 
-.Normal{
-    background-color: gray;
-}
 .Normal .user{
     font-weight: bold;
     color:black;
@@ -153,9 +191,6 @@ canvas{
     font-weight: bold;
 }
 
-.Leave{
-    background-color: gray;
-}
 /* .Leave .user{
     font-weight: bold;
     color:darkred;
@@ -175,9 +210,6 @@ canvas{
     color:lightgreen;
 }
 
-.Close{
-    background-color: gray;
-}
 /* .Close .user{
     font-weight: bold;
     color:gold;
@@ -254,8 +286,9 @@ body{
 }
 #right-panel{
     grid-area: right-panel;
-    width: 100%;
-    height: 100%;
+    padding: 5px;
+    background-color: snow;
+    border-radius: 5px;
 }
 .character{
     width: 50px;

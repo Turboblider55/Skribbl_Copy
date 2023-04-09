@@ -2,13 +2,14 @@ const mongoose = require("mongoose");
 const {usermodel,userSchema} = require('./user');
 
 const roomSchema = new mongoose.Schema({
-    players : [userSchema],
+    players : {
+        type : [ userSchema ]
+    },
     maxPlayerCount : {
         type : Number,
         default : 10,
         max : 10,
         min : 2,
-
     },
     lang :{
         type : String,
@@ -42,6 +43,18 @@ const roomSchema = new mongoose.Schema({
     guessedCounter : {
         type : Number,
         default : 0
+    },
+    //This wariable have two states 0 or 1, which translates to someone currently choosing a word, or someone currently drawing
+    gameState:{
+        type : Number,
+        default : 0
+    },
+    wordToChooseFrom : {
+        type : [ Number ],
+        default : [ 1 , 2 , 3 ]
+    },
+    prevRoundInfo : {
+        type : [{}],
     }
 });
 
