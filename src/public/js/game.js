@@ -150,9 +150,11 @@ function JoinRoom(){
     }
 }
 
-socket.on('Change-Timer',function(time){
+socket.on('Change-Timer',function(time,helpingLetter){
     Timer = time;
     //console.log(Timer);
+    if(helpingLetter && !isDrawing)
+        word_information.innerHTML = `<p>Guess This</p><p>${ConvertWord(current_room.word,helpingLetter)}</p>`;
     renderTimer(time);
 });
 
@@ -181,18 +183,22 @@ socket.on("updateRoom",function(room){
     playerCount = room.players.length;
     GameIsOn = playerCount > 1 ? true : false;
 
-    if(!GameIsOn){
-        room_maker.classList.remove('roll-up');
-        room_maker.classList.add('roll-down');
-    }
+    // if(!GameIsOn){
+    //     room_maker.classList.remove('roll-up');
+    //     room_maker.classList.add('roll-down');
+    // }
     // else{
     //     room_maker.classList.remove('roll-down');
     //     room_maker.classList.add('roll-up');
     // }
 })
 
-socket.on("start-round-to-user",function(room){
+socket.on("start-turn-to-user",function(room){
     console.log('Turn started!')
+
+    clearInterval(MyTimer);
+    MyTimer = null;
+
     current_room = room;
     console.log(room);
     isLeader = room.players.find(user=> user.socketid == socketid).isPartyLeader;
@@ -207,10 +213,11 @@ socket.on("start-round-to-user",function(room){
     GameIsOn = playerCount > 1 ? true : false;
 
     if(isDrawing){
-        word_information.innerHTML = `<p>Draw This</p><p>${current_room.word}</p>`
+        word_information.innerHTML = `<p>Draw This</p><p>${current_room.word}</p>`;
     }
-    else
-        word_information.innerHTML = `<p>Guess This</p><p>${current_room.word.split("").map(function(){return '_ '}).join("")}</p>`
+    else{
+        word_information.innerHTML = `<p>Guess This</p><p>${ConvertWord(current_room.word)}</p>`;
+    }
 
     room_maker.classList.remove('roll-down');
     room_maker.classList.add('roll-up');
@@ -228,8 +235,10 @@ socket.on('turn-over',function(room,type,datas){
     renderPlayers(room);
     ClearCanvas();
 
-    if(MyTimer)
+    if(MyTimer){
         clearInterval(MyTimer);
+        MyTimer = null;
+    }
 
     Timer = room.DrawTime;
     isGuessed = false;
@@ -248,8 +257,12 @@ socket.on('round-over',function(room,type,datas){
     SwitchTools();
     renderPlayers(room);
     ClearCanvas();
-    if(MyTimer)
-    clearInterval(MyTimer);
+
+    if(MyTimer){
+        clearInterval(MyTimer);
+        MyTimer = null;
+    }
+    
     Timer = room.DrawTime;
     isGuessed = false;
     playerCount = room.players.length;

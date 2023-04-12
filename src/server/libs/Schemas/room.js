@@ -55,6 +55,10 @@ const roomSchema = new mongoose.Schema({
     },
     prevRoundInfo : {
         type : [{}],
+    },
+    helpingLetter : {
+        type : [Number],
+        default : []
     }
 });
 

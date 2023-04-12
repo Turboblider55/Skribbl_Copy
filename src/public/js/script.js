@@ -21,6 +21,7 @@ const SetCurrentTool = function(tool){
 }
 
 let Paint_Data = [];
+Paint_Data.push([]);
 
 // message_input.addEventListener("keydown",function(event){
 
@@ -50,6 +51,30 @@ const SwitchTools = function() {
     canvas_rect = canvas.getBoundingClientRect();
 }
 
+const ConvertWord = function(word,helpingletters) {
+    let result = '';
+    if(helpingletters)
+        for(let i = 0 ; i < word.length; i ++) {
+            //Not contains, includes
+            if(helpingletters.includes(i)){
+                result += `${word.charAt(i)} `;
+            }
+            else if(ValidLetters.includes(word.charAt(i)))
+                result += '_ ';
+            else
+                result += `${word.charAt(i)} `;
+        }
+    else
+        for(let i = 0 ; i < word.length; i ++) {
+            //Not contains, includes
+            if(ValidLetters.includes(word.charAt(i)))
+                result += '_ ';
+            else
+                result += `${word.charAt(i)} `;
+        }
+    return result;
+}
+
 const setColor = function (index) {
     //console.log(index);
     //console.log("Check")
@@ -70,9 +95,9 @@ const ClearCanvas = function(){
     ctx.closePath();
 }
 
-const StartRound = function(roomid,word){
+const StartTurn = function(roomid,word){
     console.log(roomid,word);
-    socket.emit('start-round-to-server',roomid,word);
+    socket.emit('start-turn-to-server',roomid,word);
 }
 
 const RollUp = () => {
@@ -114,16 +139,14 @@ const ShowWordChoosing = (wordstochoosefrom) => {
             <p>Choose a word!</p>
             <div class='SpaceBetween'>
             ${wordstochoosefrom.map(function(word){
-                return `<div class='word-option' onclick="StartRound('${roomid}','${word}')">${word}</div>`
+                return `<div class='word-option' onclick="StartTurn('${roomid}','${word}')">${word}</div>`
             }).join('')}
             </div>
-            `
-            // <div class='word-option' onclick="StartRound(${roomid},'Choosen word')">Click this!</div>
+            `;
+            // <div class='word-option' onclick="StartTurn(${roomid},'Choosen word')">Click this!</div>
             //Waiting for the panel to come down, then start to count back
-            setTimeout(() => {
-                Timer = 15;
-                MyTimer = setInterval(ChangeTimer,1000);
-            }, 2000);
+            Timer = 15;
+            MyTimer = setInterval(ChangeTimer,1000);
         }
         else{
             room_maker.innerHTML = `
@@ -148,47 +171,8 @@ const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
             ShowWordChoosing(wordstochoosefrom);
             RollDown();
         }
-        return;
     }
-    // room_maker.innerHTML = `
-    // <p id='rightword'>The right word was <span>${rightword}</span></p>
-    // <p>Time is up!</p>
-    // <table>
-    //     ${data.map(info=>`
-    //     <tr>
-    //         <td>${info.name}</td>
-    //         <td class='${info.point_gain > 0 ? 'Gained' : 'NotGained'}'>${info.point_gain > 0 ? '+' : ''}${info.point_gain}</td>
-    //     </tr>
-    //     `).join('')}
-    // </table>
-    // `;
-
-    // const drawing_player = current_room.players.find(player=>current_room.players[current_room.turnIndex] == player);
-    // console.log(drawing_player);
-    // if(drawing_player.socketid == socketid){
-    //     room_maker.innerHTML = `
-    //     <p>Choose a word!</p>
-    //     <div class='SpaceBetween'>
-    //     ${wordstochoosefrom.map(function(word){
-    //         return `<div class='word-option' onclick="StartRound('${roomid}','${word}')">${word}</div>`
-    //     }).join('')}
-    //     </div>
-    //     `
-    //     // <div class='word-option' onclick="StartRound(${roomid},'Choosen word')">Click this!</div>
-    //     //Waiting for the panel to come down, then start to count back
-    //     setTimeout(() => {
-    //         Timer = 15;
-    //         MyTimer = setInterval(ChangeTimer,1000);
-    //     }, 2000);
-    // }
-    // else{
-    //     room_maker.innerHTML = `
-    //     <p>${drawing_player.username} is choosing a word!</p>
-    //     ${CreateAvatarText(drawing_player.body_index,drawing_player.eye_index,drawing_player.mouth)}
-    //     `
-    // }
-    
-    if(type == 'turn-over'){
+    else if(type == 'turn-over'){
         data.sort(function(p1,p2){return p1.point_gain - p2.point_gain});
         ShowPointGains(rightword,data);
         RollDown();
@@ -233,7 +217,6 @@ const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
             }, 1000);
         }, 2500);
     }
-
 }
 
 const CreateAvatarText = function(body,eye,mouth){
@@ -312,6 +295,11 @@ canvas.addEventListener('mousedown',function(event){
     if(event.button == 0){
         STATES.MOUSEDOWN = true;
     }
+    // console.log('Hey');
+    if(Paint_Data[Paint_Data.length -1].length != 0){
+        Paint_Data.push([]);
+        console.log('New part added!');
+    }
 });
 canvas.addEventListener('mouseup',function(event){
     if(event.button == 0){
@@ -346,6 +334,9 @@ socket.on('paint_to_user',function(tool,data){
         Draw(ctx,data.color,data.pos1,data.pos2,data.width);
     else if(tool == 'trash')
         ClearCanvas();
+    else if(tool == 'eraser'){
+        Erase(ctx,data.pos1,data.pos2,data.width);
+    }
 });
 
 
@@ -362,7 +353,14 @@ socket.on('paint_data_to_user',function(data){
     console.log('New painting data arrived!');
     console.log(data);
     for(let i of data){
-        Draw(ctx,i.color,i.prev,i.curr,i.width);
+        for(let j of i){
+            if(j.tool == 'pen'){
+                Draw(ctx,j.color,j.prev,j.curr,j.wjdth);
+            }
+            else if(j.tool == 'eraser'){
+                Erase(ctx,j.prev,j.curr,j.width);
+            }
+        }
     }
 });
 
@@ -379,6 +377,10 @@ const loop = () => {
             console.log('This is true');
             MyTimer = setInterval(ChangeTimer,1000);
         }
+        // if(STATES.MOUSEDOWN && !STATES.MOUSEPREV){
+        //     Paint_Data.push([]);
+        //     console.log('New part added!');
+        // }
         if(STATES.MOUSEDOWN && STATES.MOUSEPREV){
             if(TOOL == 'pen'){
                 const offset = new vec2(canvas_rect.x,canvas_rect.y);
@@ -389,15 +391,26 @@ const loop = () => {
                 //Paint_Data.push({colorindex:STATES.COLOR,prev : new_prev, curr : new_curr, canvas_width : canvas.width});
                 if(connected){
                     console.log("this code runs!");
-                    Paint_Data.push({color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
+                    Paint_Data[Paint_Data.length - 1].push({ tool : TOOL,color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
                     socket.emit('paint_to_server',TOOL,{room : roomid , color : COLORS[STATES.COLOR] , pos1 : new_prev , pos2 : new_curr , width : canvas.width});
                 }
             }
-            else
-                Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);
+            else if(TOOL == 'eraser'){
+                // Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);
+                const offset = new vec2(canvas_rect.x,canvas_rect.y);
+                //console.log(offset);
+                const new_prev = Vec2.Sub(offset,STATES.PREV);
+                const new_curr = Vec2.Sub(offset,STATES.CURR);
+
+                Erase(ctx,new_prev,new_curr,canvas.width);
+                Paint_Data[Paint_Data.length - 1].push({ tool : TOOL,color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
+                socket.emit('paint_to_server',TOOL,{room : roomid , pos1 : new_prev , pos2 : new_curr , width : canvas.width});
+            }
         }
         if(TOOL == 'trash'){
             socket.emit('paint_to_server',TOOL,{room : roomid});
+            Paint_Data = [];
+            Paint_Data.push([]);
             ClearCanvas();
             //ClearCanvas();
             TOOL = 'pen';

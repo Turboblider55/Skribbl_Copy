@@ -53,7 +53,8 @@ canvas{
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transform: translateY(-300px);
+    transform: translateY(-400px);
+    transition: transform 0s;
     /* animation: roll-down 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) 1s 1 normal forwards; */
     /* animation: name duration timing-function delay iteration-count direction fill-mode; */
     /* cubic-bezier(0.55, 0.01, 0.45, 1.38) */
@@ -65,7 +66,7 @@ canvas{
     animation-delay: 0s;
     animation-iteration-count: 1;
     animation-direction: reverse;
-    animation-fill-mode: forwards;
+    animation-fill-mode: both;
     /* animation: roll-animation 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) 1s 1 reverse forwards; */
 }
 .roll-up {
@@ -75,7 +76,7 @@ canvas{
     animation-delay: 0s;
     animation-iteration-count: 1;
     animation-direction: normal;
-    animation-fill-mode: forwards;
+    animation-fill-mode: both;
     /* animation: roll-animation 1s cubic-bezier(0.55, 0.01, 0.45, 1.38) 1s 1 normal forwards; */
 }
 .Gained {
@@ -92,9 +93,25 @@ canvas{
         transform: translateY(-400px);
     }
 }
+.word-option {
+    margin: 0px 10px;
+    text-align: center;
+    font-weight: bold;
+    
+}
 #Tools{
     grid-area: tools;
     width: 100%;
+}
+#time_container{
+    font-weight: bold;
+    margin: 0px 20px;
+    padding: 5px;
+}
+#round_container {
+    font-weight: bold;
+    margin: 0px 20px;
+    padding: 5px;
 }
 #Pen {
     background: url('../img/pen.gif');
@@ -105,6 +122,12 @@ canvas{
     background: url('../img/clear.gif');
     width: 48px;
     height: 48px;
+}
+#Eraser {
+    background: url('../img/eraser.png');
+    width: 48px;
+    height: 48px;
+    background-size: 48px;
 }
 #Main-Area{
     position: relative;
