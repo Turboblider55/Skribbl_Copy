@@ -19,7 +19,7 @@ app.use(express.static(publicpath));
 //app.use(express.json());
 
 //Connect to our MondoDB
-const DB = 'mongodb+srv://Turbo:WhJk23765@cluster0.tzcemsi.mongodb.net/?retryWrites=true&w=majority';
+const DB = 'mongodb+srv://Turbo:W4AXNtcl1z5m8Ace@cluster0.tzcemsi.mongodb.net/?retryWrites=true&w=majority';
 
 //
 mongoose.set('strictQuery', false);
