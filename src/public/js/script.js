@@ -131,6 +131,41 @@ const ShowCurrentRound = (current_round,max_round) => {
     `;
 }
 
+const ShowFinalResult = (players) => {
+    const result = players.sort(function(a,b){return b.points - a.points});
+    let str = "<div class='container-column result'><div class='SpaceBetween'>"
+    for(let i = 0 ; i < result.length ; i ++) {
+        if(i + 1 > 3){
+            if(i > 4  && i % 4 == 0){
+                str += "</div><div class='SpaceBetween'>";
+            }
+            else {
+                str += `<div>
+                <div class='SpaceBetween'>
+                ${CreateAvatarText(result[i].body_index,result[i].eye_index,result[i].mouth_index,result[i].isPartyLeader)}
+                <div class='PlaceX'>#${i + 1}</div>
+                </div>
+                <div class='name'>${result[i].username}</div>
+                </div>`
+            }
+        }
+        else{
+            str += `<div>
+            <div class='SpaceBetween'>
+            ${CreateAvatarText(result[i].body_index,result[i].eye_index,result[i].mouth_index,result[i].isPartyLeader)}
+            <div class='Place${i + 1}'>#${i + 1}</div>
+            </div>
+            <div class='username'>${result[i].username}</div>
+            </div>`
+
+            if(i + 1 == 3)
+                str += "</div><div class='SpaceBetween'>"
+        }
+    }
+    str += '</div></div>'
+    return str;
+}
+
 const ShowWordChoosing = (wordstochoosefrom) => {
     const drawing_player = current_room.players.find(player=>current_room.players[current_room.turnIndex] == player);
         console.log(drawing_player);
@@ -151,7 +186,7 @@ const ShowWordChoosing = (wordstochoosefrom) => {
         else{
             room_maker.innerHTML = `
             <p>${drawing_player.username} is choosing a word!</p>
-            ${CreateAvatarText(drawing_player.body_index,drawing_player.eye_index,drawing_player.mouth)}
+            ${CreateAvatarText(drawing_player.body_index,drawing_player.eye_index,drawing_player.mouth_index,drawing_player.isPartyLeader)}
             `
         }
 }
@@ -173,7 +208,7 @@ const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
         }
     }
     else if(type == 'turn-over'){
-        data.sort(function(p1,p2){return p1.point_gain - p2.point_gain});
+        data.sort(function(p1,p2){return p2.point_gain - p1.point_gain});
         ShowPointGains(rightword,data);
         RollDown();
         setTimeout(() => {
@@ -185,7 +220,7 @@ const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
         }, 2500);
     }
     else if(type == 'round-over'){
-        data.sort(function(p1,p2){return p1.point_gain - p2.point_gain});
+        data.sort(function(p1,p2){return p2.point_gain - p1.point_gain});
         ShowPointGains(rightword,data);
         RollDown();
         setTimeout(() => {
@@ -206,29 +241,35 @@ const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
         }, 2500);
     }
     else if(type == 'game-over'){
-        data.sort(function(p1,p2){return p1.point_gain - p2.point_gain});
+        data.sort(function(p1,p2){return p2.point_gain - p1.point_gain});
         ShowPointGains(rightword,data);
         RollDown();
         setTimeout(() => {
             RollUp();
             setTimeout(() => {
-                room_maker.innerHTML = `<div>Game Over</div>`;
+                room_maker.innerHTML = `
+                <div class='container-column final'>
+                <div #id='result'>Result</div>
+                ${ShowFinalResult(current_room.players)}
+                </div>
+                `;
                 RollDown();
             }, 1000);
         }, 2500);
     }
 }
 
-const CreateAvatarText = function(body,eye,mouth){
+const CreateAvatarText = function(body,eye,mouth,Leader){
     return `
     <div class='avatar'>
         <div class='body' style='background-position : -${(body % 10) * 100}% -${Math.floor(body / 10) * 100}%'></div>
         <div class='eye' style='background-position : -${(eye % 10) * 100}% -${Math.floor(eye / 10)  * 100}%'></div>
         <div class='mouth' style='background-position : -${(mouth % 10) * 100}% -${Math.floor(mouth / 10)  * 100}%'></div>
+        ${Leader ? `<div class='leader'></div>` : ""}
     </div>
     `;
 }
-lobby_avatar.innerHTML = CreateAvatarText(body_index,eye_index,mouth_index);
+lobby_avatar.innerHTML = CreateAvatarText(body_index,eye_index,mouth_index,isLeader);
 
 const ChangeAvatar = function(num){
     switch(num){
@@ -241,7 +282,7 @@ const ChangeAvatar = function(num){
         default : break;
     }
     
-    lobby_avatar.innerHTML =  CreateAvatarText(body_index,eye_index,mouth_index);
+    lobby_avatar.innerHTML =  CreateAvatarText(body_index,eye_index,mouth_index, isLeader);
 }
 
 
@@ -258,17 +299,19 @@ const renderPlayers = function(room){
     for(let player of room.players)
         arr.push(player.points);
     
+    
     let points_arr = [...new Set(arr)];
+    points_arr.sort(function(a,b){return b - a});
     player_container.innerHTML = room.players.map(function(player){
         //if(player.socketid == socketid)
             return `<div class='SpaceBetween ${player.guessedIt ? 'guessedIt' : ""} Player_Info' >
             <span>#${points_arr.indexOf(player.points) + 1}</span>
             <div class='player-data container-column'>
-                ${player.socketid == socketid ? `<p class='You'>${player.username} (You)</p>` : `<p>${player.username}</p>`}
-                <p>${player.points} points</p>
+                ${player.socketid == socketid ? `<p class='You username'>${player.username} (You)</p>` : `<p class='username'>${player.username}</p>`}
+                <p class='points'>${player.points} points</p>
             </div>
             ${player.isDrawing ? "<div class='pen'></div>" : ""}
-            ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
+            ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index,player.isPartyLeader)}
             </div>`;
         //else
             // return `<div class='SpaceBetween'>

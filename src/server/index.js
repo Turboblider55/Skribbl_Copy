@@ -366,6 +366,10 @@ io.on("connection", (socket) => {
             let room = await Room.findOne({_id : roomid});
             if(room){
                 const WordToGuess = room.word;
+                if(room.gameState == 0){
+                    io.to(roomid).emit("new-message-to-user",username,text,'Normal');
+                    return;
+                }
                 if(isGuessed || isDrawing){
                     //console.log('IS guessed or drawing');
                     SendToGuessedUsers(room,username,text);

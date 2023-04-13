@@ -91,7 +91,8 @@ function EndOfGame(){
 
 function JoinRoom(){
     const u = document.querySelector("#username").value;
-    const l = document.querySelector("#language").value;    
+    // const l = document.querySelector("#language").value;    
+    const l = "english";
 
     if(connected){
         if(u.length > 0)
@@ -133,6 +134,7 @@ function JoinRoom(){
                 round_container.innerHTML = `Round ${data.currRound} of ${data.maxRound}`;
                 time_container.innerHTML = data.DrawTime;
                 SwitchTools();
+                ClearCanvas();
                 console.log(isDrawing);
                 //console.log(isLeader);
                 current_room = data;
@@ -233,7 +235,7 @@ socket.on('turn-over',function(room,type,datas){
     SwitchTools();
     
     renderPlayers(room);
-    ClearCanvas();
+    // ClearCanvas();
 
     if(MyTimer){
         clearInterval(MyTimer);
@@ -256,7 +258,7 @@ socket.on('round-over',function(room,type,datas){
     round_container.innerHTML = `Round ${room.currRound} of ${room.maxRound}`;
     SwitchTools();
     renderPlayers(room);
-    ClearCanvas();
+    // ClearCanvas();
 
     if(MyTimer){
         clearInterval(MyTimer);
