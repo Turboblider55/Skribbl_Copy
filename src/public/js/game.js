@@ -108,6 +108,7 @@ function JoinRoom(){
         socket.emit("Join",{name : username,lang : l,id : socketid, body : body_index, eye : eye_index, mouth : mouth_index},function(data,err){
             if(err){
                 console.log(err);
+                return;
             }
                 roomid = data._id;
                 //console.log(data.players.find(user=> user.socketid == socketid).isPartyLeader);
@@ -150,6 +151,44 @@ function JoinRoom(){
     else{
         alert("Could not connect to the server!");
     }
+}
+
+function StartGame(){
+    let player = document.querySelector("#player-count").value;
+    let time = document.querySelector("#drawing-time").value;
+    let round = document.querySelector("#round-count").value;
+    socket.emit("startGame",roomid,socketid,{player,time,round});
+}
+function CreateRoom(){
+    socket.emit("createRoom",{name : username,lang : l,id : socketid, body : body_index, eye : eye_index, mouth : mouth_index},function(data,err){
+
+        if(err){
+            console.log("ERROR!");
+            return;
+        }
+                roomid = data._id;
+                //console.log(data.players.find(user=> user.socketid == socketid).isPartyLeader);
+                isLeader = true
+                isDrawing = false
+                playerCount = 1
+
+                round_container.innerHTML = `Round ${data.currRound} of ${data.maxRound}`;
+                time_container.innerHTML = data.DrawTime;
+                SwitchTools();
+                ClearCanvas();
+                console.log(isDrawing);
+                //console.log(isLeader);
+                current_room = data;
+                //console.log(data);
+                console.log('No error here!');
+                Joined = true;
+                Timer = data.currentTime;
+                console.log(data);
+                renderPlayers(data);
+                gameon();
+
+
+    });
 }
 
 socket.on('Change-Timer',function(time,helpingLetter){

@@ -59,6 +59,39 @@ canvas{
     /* animation: name duration timing-function delay iteration-count direction fill-mode; */
     /* cubic-bezier(0.55, 0.01, 0.45, 1.38) */
 }
+#RoomMaking{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+#StartButton{
+    width: 100%;
+    color : black;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 5px;
+    border: 1px solid green;
+    background-color: lightgreen;
+    border-radius: 10px;
+}
+#round{
+    background: url('../img/setting_3.gif');
+    width: 32px;
+    height: 32px;
+}
+#drawtime{
+    background: url('../img/setting_2.gif');
+    width: 32px;
+    height: 32px;
+}
+#player{
+    background: url('../img/setting_1.gif');
+    width: 32px;
+    height: 32px;
+}
+#RoomMaking * {
+    margin: 5px;
+}
 .roll-down {
     animation-name: roll-animation;
     animation-duration: 1s;

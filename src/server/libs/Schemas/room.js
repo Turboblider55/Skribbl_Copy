@@ -17,17 +17,19 @@ const roomSchema = new mongoose.Schema({
     },
     DrawTime : {
         type : Number,
-        default : 120,
+        default : 60,
         min : 15,
-        max : 240,
+        max : 120,
     },
     currentTime : {
         type : Number,
-        default : 120,
+        default : 60,
     },
     maxRound : {
         type : Number,
-        default : 1,
+        default : 3,
+        min : 1,
+        max : 5
     },
     currRound : {
         type : Number,
@@ -44,7 +46,7 @@ const roomSchema = new mongoose.Schema({
         type : Number,
         default : 0
     },
-    //This wariable have two states 0 or 1, which translates to someone currently choosing a word, or someone currently drawing
+    //This wariable have 3 states 0 to 2, which are waiting, choosing a word and drawing 
     gameState:{
         type : Number,
         default : 0

@@ -12,6 +12,7 @@ const round_container = document.querySelector('#round_container');
 const lobby_avatar = document.querySelector('#lobby_avatar');
 const room_maker = document.querySelector('#room_maker');
 const word_information = document.querySelector('#word_information');
+const roomMaking = document.querySelector("#RoomMaking");
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
 let window_width = window.innerWidth;
@@ -191,21 +192,96 @@ const ShowWordChoosing = (wordstochoosefrom) => {
         }
 }
 
+const ShowRoomMaking = () => {
+    word_information.innerHTML = 'Waiting';
+    time_container.innerHTML = '0';
+
+    room_maker.innerHTML = `
+    <div id='RoomMaking'>
+        <div class='SpaceBetween'>
+            <div class='SpaceBetween'>
+                <div id='player'></div>
+                <div>Player Count</div>
+            </div>
+            <select id='player-count' ${!isLeader ? 'disabled' : ''}>
+                <option value='2'>2</option>
+                <option value='3'>3</option>
+                <option value='4'>4</option>
+                <option value='5'>5</option>
+                <option value='6'>6</option>
+                <option value='7'>7</option>
+                <option value='8'>8</option>
+                <option value='9'>9</option>
+                <option value='10' selected='selected'>10</option>
+            </select>
+        </div>
+
+        <div class='SpaceBetween'>
+            <div class='SpaceBetween'>
+                <div id='drawtime'></div>
+                <div>Drawing Time</div>
+            </div>
+            <select id='drawing-time' ${!isLeader ? 'disabled' : ''}>
+                <option value='15'>15 seconds</option>
+                <option value='30'>30 seconds</option>
+                <option value='45'>45 seconds</option>
+                <option value='60' selected="selected">60 seconds</option>
+                <option value='75'>75 seconds</option>
+                <option value='90'>90 seconds</option>
+                <option value='105'>105 seconds</option>
+                <option value='120'>120 seconds</option>
+            </select>
+        </div>
+
+        <div class='SpaceBetween'>
+            <div class='SpaceBetween'>
+                <div id='round'></div>
+                <div>Rounds</div>
+            </div>
+            <select id='round-count' ${!isLeader ? 'disabled' : ''}>
+                <option value='1'>1</option>
+                <option value='2'>2</option>
+                <option value='3 selected="selected"'>3</option>
+                <option value='4'>4</option>
+                <option value='5'>5</option>
+            </select>
+        </div>
+
+        <button id='StartButton' onclick='StartGame()' ${!isLeader ? 'disabled' : ''}>Start</button>
+    </div>
+    `
+}
+
 const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
-    if(type == 'game-start'){
-        if(room_maker.classList.contains('roll-down')){
+    if(type == 'room-making'){
+        ShowRoomMaking();
+        RollDown();
+    }
+    else if(type == 'waiting'){
+        ShowCurrentRound(current_room.currRound,current_room.maxRound);
+        RollUp();
+        setTimeout(() => {
+            room_maker.innerHTML = `
+                <div>
+                    <p>Waiting for other players!</p>
+                </div>
+                `;
+            RollDown();
+        }, 1000);
+    }
+    else if(type == 'game-start'){
             RollUp();
             setTimeout(() => {
-                // room_maker.innerHTML = `<p>Helo guys!</p>`;
-                ShowWordChoosing(wordstochoosefrom);
+                ShowCurrentRound(current_room.currRound,current_room.maxRound);
                 RollDown();
+                setTimeout(() => {
+                    RollUp();
+                    setTimeout(() => {
+                        ShowWordChoosing(wordstochoosefrom);
+                        RollDown();
+                    }, 1000);
+                }, 1000);
             }, 1000);
-        }
-        else{
-            // room_maker.innerHTML = `<p>Helo guys!</p>`;
-            ShowWordChoosing(wordstochoosefrom);
-            RollDown();
-        }
     }
     else if(type == 'turn-over'){
         data.sort(function(p1,p2){return p2.point_gain - p1.point_gain});
@@ -254,6 +330,18 @@ const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {
                 </div>
                 `;
                 RollDown();
+                setTimeout(() => {
+                    RollUp();
+                    setTimeout(() => {
+                        // room_maker.innerHTML = `
+                        // <div>
+                        //     <p>Waiting for other players!</p>
+                        // </div>
+                        // `;
+                        ShowRoomMaking();
+                        RollDown();
+                    }, 1000);
+                }, 3000);
             }, 1000);
         }, 2500);
     }
