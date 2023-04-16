@@ -276,10 +276,8 @@ socket.on('turn-over',function(room,type,datas){
     renderPlayers(room);
     // ClearCanvas();
 
-    if(MyTimer){
-        clearInterval(MyTimer);
-        MyTimer = null;
-    }
+    clearInterval(MyTimer);
+    MyTimer = null;
 
     Timer = room.DrawTime;
     isGuessed = false;
@@ -299,10 +297,8 @@ socket.on('round-over',function(room,type,datas){
     renderPlayers(room);
     // ClearCanvas();
 
-    if(MyTimer){
-        clearInterval(MyTimer);
-        MyTimer = null;
-    }
+    clearInterval(MyTimer);
+    MyTimer = null;
     
     Timer = room.DrawTime;
     isGuessed = false;

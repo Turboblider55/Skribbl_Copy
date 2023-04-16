@@ -103,6 +103,7 @@ io.on("connection", (socket) => {
     }
 
     const SetToStart = async (room) => {
+        try{
         for(let player of room.players){
             player.guessedIt = false;
             player.isDrawing = false;
@@ -116,22 +117,22 @@ io.on("connection", (socket) => {
         room.guessedCounter = 0;
         //console.log(room);
         await room.save();
-        room = await Room.findOne({_id : room._id});
         await Room.updateOne({_id : room._id},{wordToChooseFrom : []});
         await room.save();
-        room = await Room.findOne({_id : room._id});
         await Room.updateOne({_id : room._id},{ wordToChooseFrom : [Math.floor(Math.random() * words.length) , Math.floor(Math.random() * words.length) , Math.floor(Math.random() * words.length)]});
         await room.save();
-        room = await Room.findOne({_id : room._id});
         await Room.updateOne({_id : room._id},{gameState : 1});
         await room.save();
-        room = await Room.findOne({_id : room._id});
-        await Room.updateOne({_id : room._id},{helpingLetter : []});
+        await Room.updateOne({ _id : room._id},{helpingLetter : []});
         await room.save();
-        room = await Room.findOne({_id : room._id});
+        }catch(err){
+            console.log(err);
+        }
+        // room = await Room.findOne({_id : room._id});
     }
 
     const EndGame = async (room) => {
+        try{
         console.log('End of the game!');
         const point_gains = await CalculatePoints(room);
         await SetToStart(room);
@@ -140,6 +141,9 @@ io.on("connection", (socket) => {
         io.to(room._id.valueOf()).emit('end-of-game',room);
         io.to(room._id.valueOf()).emit('round-over',room,'game-over',{point_gains : point_gains,rightWord : room.word});
         io.to(room._id.valueOf()).emit('new-message-to-user','',`The game is over!`,'Drawing');
+        }catch(err){
+            console.log(err);
+        }
     }
 
     const ChangeRound = async (room) => {
@@ -444,6 +448,9 @@ io.on("connection", (socket) => {
                         io.to(roomid).emit('turn-over',room,'game-start',{wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
                     else
                         socket.emit('turn-over',room,'waiting',{});
+                    
+                    await Room.updateOne({_id : roomid},{'players.0.isDrawing' : true});
+                    await room.save();
                 }
             }
             else
@@ -474,10 +481,10 @@ io.on("connection", (socket) => {
                     //This can only be two, if the previous length of the array was one before joining
                     //Also it has to be the first round, first turn, since one player cannot play any game by itself
                     if(room.gameState == 0){
-                        io.to(id).emit('turn-over',room,'room-making',{});
+                        socket.emit('turn-over',room,'room-making',{});
                     }
                     else if(room.gameState == 1 && room.turnIndex == 0 && room.currRound == 1){
-                        io.to(id).emit('turn-over',room,'game-start',{wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
+                        socket.emit('turn-over',room,'game-start',{wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
                         await setGameState(id,1);
                         room.players[0].isDrawing = true;
                         await room.save();
@@ -486,10 +493,10 @@ io.on("connection", (socket) => {
                     // at the same time, we need to check if the turnindex is not 0,
                     // because that means, it is not the start of a new round
                     else if(room.gameState == 1 && room.turnIndex != 0){
-                            io.to(id).emit('turn-over',room,'turn-over',{point_gains : room.prevRoundInfo , rightWord : room.word , wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
+                            socket.emit('turn-over',room,'turn-over',{point_gains : room.prevRoundInfo , rightWord : room.word , wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
                     }
                     else if(room.gameState == 1 && room.turnIndex == 0){
-                        io.to(id).emit('turn-over',room,'round-over',{point_gains : room.prevRoundInfo , rightWord : room.word , wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
+                        socket.emit('turn-over',room,'round-over',{point_gains : room.prevRoundInfo , rightWord : room.word , wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
                     }
 
                     const user = room.players.find(player=>player.isDrawing == true);
