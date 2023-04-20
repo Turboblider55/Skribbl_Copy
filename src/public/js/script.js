@@ -3,8 +3,8 @@ let canvas_rect = canvas.getBoundingClientRect();
 const Tools = document.querySelector('#Tools');
 const holder = document.querySelector("#Main-Area");
 const Colors = document.querySelector("#Colors");
-const Selected_Color = document.querySelector('#Selected_Color')
-const chat = document.querySelector("#Chat-body")
+const Selected_Color = document.querySelector('#Selected_Color');
+const chat = document.querySelector("#Chat-body");
 const message_input = document.querySelector("#message_input");
 const player_container = document.querySelector("#player_container");
 const time_container = document.querySelector('#time_container');
@@ -379,9 +379,6 @@ const renderTimer = function (time) {
 }
 
 const renderPlayers = function(room){
-    // console.log(room.players)
-    // room.players = room.players.sort((a,b)=> a.username - b.username);
-    // console.log(room.players);
 
     let arr = [];
     for(let player of room.players)
@@ -401,15 +398,6 @@ const renderPlayers = function(room){
             ${player.isDrawing ? "<div class='pen'></div>" : ""}
             ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index,player.isPartyLeader)}
             </div>`;
-        //else
-            // return `<div class='SpaceBetween'>
-            // <span>#${points_arr.indexOf(player.points) + 1}</span>
-            // <div class='player-data'>
-            //     <p>${player.username}</p>
-            //     <p>${player.points}</p>
-            // </div>
-            // ${CreateAvatarText(player.body_index, player.eye_index, player.mouth_index)}
-            // </div>`;
     }).join("\n");
 }
 
@@ -486,7 +474,7 @@ socket.on('paint_data_to_user',function(data){
     for(let i of data){
         for(let j of i){
             if(j.tool == 'pen'){
-                Draw(ctx,j.color,j.prev,j.curr,j.wjdth);
+                Draw(ctx,j.color,j.prev,j.curr,j.width);
             }
             else if(j.tool == 'eraser'){
                 Erase(ctx,j.prev,j.curr,j.width);
@@ -520,11 +508,9 @@ const loop = () => {
                 const new_curr = Vec2.Sub(offset,STATES.CURR);
                 Draw(ctx,COLORS[STATES.COLOR],new_prev,new_curr,canvas.width);
                 //Paint_Data.push({colorindex:STATES.COLOR,prev : new_prev, curr : new_curr, canvas_width : canvas.width});
-                if(connected){
                     console.log("this code runs!");
                     Paint_Data[Paint_Data.length - 1].push({ tool : TOOL,color : COLORS[STATES.COLOR],prev : new_prev,curr : new_curr,width : canvas.width});
                     socket.emit('paint_to_server',TOOL,{room : roomid , color : COLORS[STATES.COLOR] , pos1 : new_prev , pos2 : new_curr , width : canvas.width});
-                }
             }
             else if(TOOL == 'eraser'){
                 // Fill(ctx,STATES.CURR,COLORS[STATES.COLOR]);

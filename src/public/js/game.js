@@ -23,7 +23,7 @@ let eye_index = Math.floor(Math.random() * 56);
 let mouth_index = Math.floor(Math.random() * 50);
 
 function validateName(name){
-    return name.trim().length > 0;
+    return name.trim().length > 0 && name.trim().length <= 30;
 }
 
 function ChangeTimer(){
@@ -57,8 +57,6 @@ function sendMessage(event,obj){
 function gameon(){
     document.querySelector("#game").style.display = 'grid';
     document.querySelector("#lobby").style.display = 'none';
-    canvas_rect = canvas.getBoundingClientRect();
-    console.log(canvas_rect);
     Joined = true;
 }
 function gameoff(){
@@ -71,7 +69,6 @@ function gameoff(){
     if(Joined){
         gameoff();
         socket.emit("leave",{roomid , socketid , username , isDrawing})
-        EndOfGame();
     }
 }
 
@@ -120,17 +117,6 @@ function JoinRoom(){
                 if(!GameIsOn){
                     RollDown();
                 }
-                //If we have the game going, than we don't have to set the roll up animation
-                //Also, if we join the game, we cannot be the drawer for sure, so we don't have to check
-                // if(data.gameState == 0 && GameIsOn){
-                //     const drawing_player = data.players.find(player=>player.isDrawing == true);
-                //     if(drawing_player){
-                //         room_maker.innerHTML = `
-                //         <p>${drawing_player.username} is choosing a word!</p>
-                //         ${CreateAvatarText(drawing_player.body_index,drawing_player.eye_index,drawing_player.mouth)}
-                //         `
-                //     }
-                // }
 
                 round_container.innerHTML = `Round ${data.currRound} of ${data.maxRound}`;
                 time_container.innerHTML = data.DrawTime;
@@ -220,18 +206,8 @@ socket.on("updateRoom",function(room){
     //console.log(isLeader);
     current_room = room;
     renderPlayers(room);
-    SwitchTools();
     playerCount = room.players.length;
     GameIsOn = playerCount > 1 ? true : false;
-
-    // if(!GameIsOn){
-    //     room_maker.classList.remove('roll-up');
-    //     room_maker.classList.add('roll-down');
-    // }
-    // else{
-    //     room_maker.classList.remove('roll-down');
-    //     room_maker.classList.add('roll-up');
-    // }
 })
 
 socket.on("start-turn-to-user",function(room){
@@ -262,6 +238,7 @@ socket.on("start-turn-to-user",function(room){
 
     room_maker.classList.remove('roll-down');
     room_maker.classList.add('roll-up');
+    canvas_rect = canvas.getBoundingClientRect();
 });
 
 socket.on('turn-over',function(room,type,datas){
