@@ -130,12 +130,43 @@ io.on("connection", (socket) => {
         }
         // room = await Room.findOne({_id : room._id});
     }
+    const ResetGame = async (room) => {
+        try{
+            for(let player of room.players){
+                player.guessedIt = false;
+                player.isDrawing = false;
+                player.guessedIndex = -1;
+                player.points = 0;
+            }
+            await room.save();
+            room = await Room.findOne({_id : room._id});
+            room.currentTime = room.DrawTime;
+            await room.save();
+            room = await Room.findOne({_id : room._id});
+            room.guessedCounter = 0;
+            //console.log(room);
+            await room.save();
+            await Room.updateOne({_id : room._id},{wordToChooseFrom : []});
+            await room.save();
+            await Room.updateOne({_id : room._id},{ wordToChooseFrom : [Math.floor(Math.random() * words.length) , Math.floor(Math.random() * words.length) , Math.floor(Math.random() * words.length)]});
+            await room.save();
+            await Room.updateOne({_id : room._id},{gameState : 0});
+            await room.save();
+            await Room.updateOne({ _id : room._id},{helpingLetter : []});
+            await room.save();
+            await Room.updateOne({_id : room._id},{turnIndex : 0});
+            await room.save();
+            await Room.updateOne({_id : room.id},{currRound : 0});
+            }catch(err){
+                console.log(err);
+            }
+    }
 
     const EndGame = async (room) => {
         try{
         console.log('End of the game!');
         const point_gains = await CalculatePoints(room);
-        await SetToStart(room);
+        await ResetGame(room);
         await setGameState(room._id,0);
         room = await Room.findOne({_id : room._id});
         io.to(room._id.valueOf()).emit('end-of-game',room);

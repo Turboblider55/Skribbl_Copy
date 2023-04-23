@@ -46,7 +46,7 @@ const roomSchema = new mongoose.Schema({
         type : Number,
         default : 0
     },
-    //This wariable have 3 states 0 to 2, which are waiting, choosing a word and drawing 
+    //This variable have 3 states 0 to 2, which are waiting, choosing a word and drawing 
     gameState:{
         type : Number,
         default : 0
