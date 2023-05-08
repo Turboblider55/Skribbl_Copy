@@ -312,11 +312,8 @@ canvas{
 .player-data p{
     margin: 0px 5px 0px 5px;
 }
-.player_container {
-    width: 100%;
-}
-html{
-    height: 100vh;
+#player_container {
+    min-height: 350px;
 }
 body{
     margin: 0px;
@@ -365,7 +362,7 @@ body{
 #left-panel {
     grid-area: left-panel;
     width: 100%;
-    height: 100%;
+    height: 72%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -434,11 +431,11 @@ body{
     height: 24px;
     background: url('../img/how.gif');
 }
-#Settings{
+/* #Settings{
     width: 32px;
     height: 32px;
     background: url('../img/settings.gif');
-}
+} */
 #header {
     width: 90vw;
     background-color: snow;

@@ -185,6 +185,11 @@ socket.on('Change-Timer',function(time,helpingLetter){
     renderTimer(time);
 });
 
+socket.on("Kicked",function(text){
+    alert('You have been kicked! Reason(s):' +text);
+    Disconnect();
+});
+
 socket.on('end-of-game',function(room){
     //console.log(room);
     renderPlayers(room);

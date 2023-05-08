@@ -13,6 +13,7 @@ const lobby_avatar = document.querySelector('#lobby_avatar');
 const room_maker = document.querySelector('#room_maker');
 const word_information = document.querySelector('#word_information');
 const roomMaking = document.querySelector("#RoomMaking");
+const modal_body = document.querySelector(".modal-body");
 const ctx = canvas.getContext("2d",{alpha:true,desynchronized:false,colorSpace:'srgb',willReadFrequently:true});
 let TOOL = 'pen';
 let window_width = window.innerWidth;
@@ -208,11 +209,7 @@ const ShowRoomMaking = () => {
                 <option value='3'>3</option>
                 <option value='4'>4</option>
                 <option value='5'>5</option>
-                <option value='6'>6</option>
-                <option value='7'>7</option>
-                <option value='8'>8</option>
-                <option value='9'>9</option>
-                <option value='10' selected='selected'>10</option>
+                <option value='6' selected='selected'>6</option>
             </select>
         </div>
 
@@ -250,6 +247,34 @@ const ShowRoomMaking = () => {
         <button id='StartButton' onclick='StartGame()' ${!isLeader ? 'disabled' : ''}>Start</button>
     </div>
     `
+}
+
+const SendVote = (id,name) => {
+    socket.emit("votePlayer",{roomid: roomid , playerid : id, playername: name,  fromid: socketid, fromname: username},function(err){
+        if(err){
+            console.log(err)
+            alert(err);
+        }    
+    });
+}
+
+const showVoteKickOption = () => {
+    const text = current_room.players.map(player=>{
+    if(player.socketid != socketid)
+    return `
+    <div onclick='SendVote("${player.socketid}")' data-toggle="modal" data-target="#exampleModal">
+        <p>${player.username}</p>
+        ${CreateAvatarText(player.body_index,player.eye_index,player.mouth_index)}
+    </div>
+    `;
+    }
+    ).join("");
+
+    if(text.length == 0){
+        modal_body.innerHTML = 'There is noone to kick! :-|';
+        return;
+    }
+    modal_body.innerHTML = text;
 }
 
 const ShowRollDown = (type,data,rightword,wordstochoosefrom) => {

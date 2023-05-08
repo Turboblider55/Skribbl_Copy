@@ -108,6 +108,7 @@ io.on("connection", (socket) => {
             player.guessedIt = false;
             player.isDrawing = false;
             player.guessedIndex = -1;
+            player.votes = [];
         }
         await room.save();
         room = await Room.findOne({_id : room._id});
@@ -137,6 +138,7 @@ io.on("connection", (socket) => {
                 player.isDrawing = false;
                 player.guessedIndex = -1;
                 player.points = 0;
+                player.votes = [];
             }
             await room.save();
             room = await Room.findOne({_id : room._id});
@@ -321,6 +323,72 @@ io.on("connection", (socket) => {
         await Room.updateOne({_id : roomid},{gameState : state});
     }
 
+    const kickPlayer = async (params) => {
+        try{
+            let room = await Room.findOne({_id : params.roomid});
+            if(room){
+                //if we find a room with a matching roomid, then we leave the socket room and the mongodb room too
+                socket.leave(params.roomid);
+
+                if(room.players.length > 1){
+                    //We can only do one task at once, we have to save and fetch the room again between tasks
+                    console.log("Room found!");
+                    room.players.pull({socketid : params.socketid});
+                    await room.save();
+                    room = await Room.findOne({_id : params.roomid});
+                    room.players[0].isPartyLeader = true;
+                    await room.save();
+                    //for some reason, it won't update the local variable, so we have to fetch the updated one
+                    room = await Room.findOne({_id : params.roomid});
+                    for(let i = 0 ; i < room.players.length; i++){
+                        const index = room.players[i].votes.indexOf(params.socketid);
+                        if(index == -1)
+                            continue;
+                        
+                        room.players[i].votes.splice(index,1);
+                        await room.save();
+                    }
+                    room = await Room.findOne({_id : params.roomid});
+                    //Sending to every user in the room the new roomdata
+                    if(params.kicked == true){
+                        console.log("This code runs!");
+                        socket.to(params.socketid).emit("Kicked","Sad :-(");
+                    }
+                    socket.broadcast.to(params.roomid).emit('updateRoom',room);
+                    socket.broadcast.to(params.roomid).emit('new-message-to-user','',`${params.username} left the room!`,'Leave');
+                    
+                    // if(room.gameState != 0){
+                        if((params.isDrawing && room.gameState == 2) || (room.players.indexOf(params) == room.turnIndex && room.gameState == 1)){
+                            //console.log(room.turnIndex + 1 < room.players.length);
+                            if(room.turnIndex + 1 < room.players.length){
+                                const point_gains = await CalculatePoints(room);
+                                await SetToStart(room);
+                                await setGameState(room._id,1);
+                                io.to(room._id.valueOf()).emit('turn-over',room,'turn-over',{point_gains : point_gains,rightWord : room.word,wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
+                                
+                                room.players[room.turnIndex].isDrawing = true;
+                                room.players[room.turnIndex].guessedIt = false;
+                                await room.save();
+                                //You have to user the valueof function to get only the id
+                                return;
+                            }
+                            //If the turnindex + 1 is not less than players.length, than it must be equal, 
+                            //Since we only increment by one every time
+                            return await ChangeRound(room);
+                        }
+                        if(room.players.length == 1)
+                            return EndGame(room);
+                    // }
+                }else{
+                    const status = await deleteRoom(params.roomid);
+                    console.log("Room deleting status : "+status.acknowledged);
+                }
+            }
+        }catch(err){
+            console.log(err);
+        }
+    }
+
     socket.on('Change-Timer',async (roomid,time)=>{
         //console.log('Time is sent');
         let room = await Room.findOne({_id : roomid});
@@ -408,7 +476,7 @@ io.on("connection", (socket) => {
                         socket.broadcast.to(roomid).emit('new-message-to-user','',`${username} guessed the word!`,'Guessed');
                         //io.sockets.socket(socketid).emit('new-message-to-user','Server','You guessed it!');
                         socket.emit('new-message-to-user','','You guessed it!','Guessed');
-                        //You have to use update on the schema itself, not on the element of the room schema
+                        //You have to use update on the schema itself, not on the element of the room
                         const result = await Room.updateOne({'players.socketid' : socketid},{$set:{'players.$.guessedIt' : true}});
                         //console.log(result);
                         room = await Room.findOne({_id : roomid});
@@ -456,6 +524,39 @@ io.on("connection", (socket) => {
 
         }catch(e){
             return cb(null,e);
+        }
+    });
+    // socket.emit("leave",{roomid , socketid , username , isDrawing})
+    socket.on("votePlayer",async function(data,callback){
+        try{
+
+            let room = await Room.findOne({_id : data.roomid});
+            const player = room.players.find(player=>player.socketid == data.playerid);
+            const index = room.players.indexOf(player);
+            if(room.players[index].votes.includes(data.fromid)){
+                return callback('You can only vote once every match! :-)');
+            }
+            if(room.gameState != 2){
+                return callback('The match has not started yet! Wait till it starts. :-)');
+            }
+            await Room.updateOne({_id : data.roomid, players: { $elemMatch: {socketid : data.playerid} }},{$push:{'players.$.votes': data.fromid}});
+            await room.save();
+            room = await Room.findOne({_id : data.roomid});
+            
+
+            console.log(room.players[index].votes.length, Math.floor(room.players.length / 2))
+
+            if(room.players[index].votes.length == Math.floor(room.players.length / 2)){
+                console.log('This player is getting kicked!')
+                kickPlayer({roomid: room._id, socketid: data.playerid, username: data.playername, isDrawing: room.players[index].isDrawing, kicked : true});
+                return;
+            }
+            console.log("This code runs!");
+            io.to(room._id).emit("new-message-to-user",'',`'${data.fromname}' is voting to kick '${data.playername}' (${room.players[index].votes.length}/${room.players.length / 2})`,'Normal');
+
+        }catch(err){
+            console.log(err);
+            return callback(err,null)
         }
     });
 
@@ -557,57 +658,8 @@ io.on("connection", (socket) => {
     });
 
     socket.on("leave",async function(params){
-        try{
-            let room = await Room.findOne({_id : params.roomid});
-            //console.log("This code runs when the page is refreshed!");
-            if(room){
-                //if we find a room with a matching roomid, then we leave the socket room and the mongodb room too
-                socket.leave(params.roomid);
-
-                if(room.players.length > 1){
-                    //We can only do one task at once, we have to save and fetch the room again between tasks
-                    console.log("Room found!");
-                    room.players.pull({socketid : params.socketid});
-                    await room.save();
-                    room = await Room.findOne({_id : params.roomid});
-                    room.players[0].isPartyLeader = true;
-                    await room.save();
-                    //for some reason, it won't update the local variable, so we have to fetch the updated one
-                    room = await Room.findOne({_id : params.roomid});
-                    //Sending to every user in the room the new roomdata
-                    socket.broadcast.to(params.roomid).emit('updateRoom',room);
-                    socket.broadcast.to(params.roomid).emit('new-message-to-user','',`${params.username} left the room!`,'Leave');
-                    
-                    // if(room.gameState != 0){
-                        if((params.isDrawing && room.gameState == 2) || (room.players.indexOf(params) == room.turnIndex && room.gameState == 1)){
-                            //console.log(room.turnIndex + 1 < room.players.length);
-                            if(room.turnIndex + 1 < room.players.length){
-                                const point_gains = await CalculatePoints(room);
-                                await SetToStart(room);
-                                await setGameState(room._id,1);
-                                io.to(room._id.valueOf()).emit('turn-over',room,'turn-over',{point_gains : point_gains,rightWord : room.word,wordstochoosefrom:[words[room.wordToChooseFrom[0]],words[room.wordToChooseFrom[1]],words[room.wordToChooseFrom[2]]]});
-                                
-                                room.players[room.turnIndex].isDrawing = true;
-                                room.players[room.turnIndex].guessedIt = false;
-                                await room.save();
-                                //You have to user the valueof function to get only the id
-                                return;
-                            }
-                            //If the turnindex + 1 is not less than players.length, than it must be equal, 
-                            //Since we only increment by one every time
-                            return await ChangeRound(room);
-                        }
-                        if(room.players.length == 1)
-                            return EndGame(room);
-                    // }
-                }else{
-                    const status = await deleteRoom(params.roomid);
-                    console.log("Room deleting status : "+status.acknowledged);
-                }
-            }
-        }catch(err){
-            console.log(err);
-        }
+        params.kicked = false;
+        kickPlayer(params);
     });
 })
 

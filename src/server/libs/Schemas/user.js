@@ -41,6 +41,10 @@ const userSchema = new mongoose.Schema({
     mouth_index : {
         type : Number, 
         default : 0
+    },
+    votes: {
+        type : Array,
+        default : []
     }
 });
 const usermodel = mongoose.model('User',userSchema); 

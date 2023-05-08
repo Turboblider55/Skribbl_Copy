@@ -7,8 +7,8 @@ const roomSchema = new mongoose.Schema({
     },
     maxPlayerCount : {
         type : Number,
-        default : 10,
-        max : 10,
+        default : 6,
+        max : 6,
         min : 2,
     },
     lang :{
