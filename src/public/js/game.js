@@ -186,7 +186,7 @@ socket.on('Change-Timer',function(time,helpingLetter){
 });
 
 socket.on("Kicked",function(text){
-    alert('You have been kicked! Reason(s):' +text);
+    alert('You have been kicked! Reason:' +text);
     Disconnect();
 });
 
